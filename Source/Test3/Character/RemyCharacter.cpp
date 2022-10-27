@@ -142,7 +142,7 @@ void ARemyCharacter::EquipButtonPressed()
 	{
 		if (HasAuthority()) 
 		{
-		Combat->EquipWeapon(OverlappingWeapon);
+			Combat->EquipWeapon(OverlappingWeapon);
 		}
 		else 
 		{

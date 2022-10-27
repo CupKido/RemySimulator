@@ -45,6 +45,7 @@ protected:
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
 private:
+
 	class ARemyCharacter* Character;
 
 
