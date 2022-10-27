@@ -7,6 +7,7 @@
 #include "CombatComponent.generated.h"
 
 class AWeapon;
+#define TRACE_LENGTH 80000.f;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TEST3_API UCombatComponent : public UActorComponent
@@ -14,7 +15,6 @@ class TEST3_API UCombatComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:	
-	// Sets default values for this component's properties
 	UCombatComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -22,7 +22,6 @@ public:
 
 	void EquipWeapon(AWeapon* WeaponToEquip);
 protected:
-	// Called when the game starts
 	virtual void BeginPlay() override;
 
 	
@@ -37,6 +36,13 @@ protected:
 
 	void FireButtonPressed(bool bPressed);
 
+	UFUNCTION(Server, Reliable)
+	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
+	
+	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
 private:
 	class ARemyCharacter* Character;
@@ -54,8 +60,9 @@ private:
 	float AimWalkSpeed;
 
 	bool bFireButtonPressed;
+
+
 public:	
-	// Called every frame
 
 		
 };

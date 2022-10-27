@@ -12,7 +12,6 @@
 // Sets default values
 AWeapon::AWeapon()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
 
@@ -34,7 +33,7 @@ AWeapon::AWeapon()
 	PickupWidget->SetupAttachment(RootComponent);
 }
 
-// Called when the game starts or when spawned
+
 void AWeapon::BeginPlay()
 {
 	
@@ -50,7 +49,6 @@ void AWeapon::BeginPlay()
 	}
 }
 
-// Called every frame
 void AWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -109,7 +107,7 @@ void  AWeapon::SetWeaponState(EWeaponState State) {
 	}
 }
 
-void AWeapon::Fire() {
+void AWeapon::Fire(const FVector& HitTarget) {
 	if (FireAnimation) {
 		WeaponMesh->PlayAnimation(FireAnimation, false);
 	}

@@ -16,7 +16,7 @@
 // Sets default values
 ARemyCharacter::ARemyCharacter()
 {
-	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+
 	PrimaryActorTick.bCanEverTick = true;
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -53,7 +53,7 @@ void ARemyCharacter::BeginPlay()
 
 }
 
-// Called every frame
+
 void ARemyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
