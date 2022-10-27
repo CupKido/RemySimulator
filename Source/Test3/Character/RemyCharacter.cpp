@@ -10,7 +10,9 @@
 #include "Test3/Weapon/Weapon.h"
 #include "Test3/RemyComponent/CombatComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "RemyAnimInstance.h"
 
+#include "Internationalization/Text.h"
 // Sets default values
 ARemyCharacter::ARemyCharacter()
 {
@@ -75,6 +77,8 @@ void ARemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ARemyCharacter::CrouchButtonPressed);
 	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &ARemyCharacter::AimButtonPressed);
 	PlayerInputComponent->BindAction("Aim", IE_Released, this, &ARemyCharacter::AimButtonReleased);
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ARemyCharacter::FireButtonPressed);
+	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ARemyCharacter::FireButtonReleased);
 
 
 	
@@ -94,6 +98,26 @@ void ARemyCharacter::PostInitializeComponents() {
 	}
 }
 
+void ARemyCharacter::PlayFireMontage(bool bAiming) {
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+
+	UAnimInstance * AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && FireWeaponMontage) {
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				60.f,
+				FColor::Blue,
+				TEXT("Playing montage")
+			);
+		}
+		AnimInstance->Montage_Play(FireWeaponMontage);
+		FName SectionName;
+		SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
 //InputAction
 
 void ARemyCharacter::MoveForward(float Value) {
@@ -188,6 +212,18 @@ void ARemyCharacter::Jump() {
 	}
 	else {
 		Super::Jump();
+	}
+}
+
+void ARemyCharacter::FireButtonPressed() {
+	if (Combat) {
+		Combat->FireButtonPressed(true);
+	}
+}
+
+void ARemyCharacter::FireButtonReleased() {
+	if (Combat) {
+		Combat->FireButtonPressed(false);
 	}
 }
 
