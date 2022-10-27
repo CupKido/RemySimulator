@@ -60,17 +60,10 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 
 void UCombatComponent::FireButtonPressed(bool bPressed) {
 	bFireButtonPressed = bPressed;
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(
-			-1,
-			60.f,
-			FColor::Blue,
-			TEXT("Fire Button Pressed")
-		);
-	}
+	if (EquippedWeapon == nullptr) return;
 	if (Character && bFireButtonPressed) {
 		Character->PlayFireMontage(bAiming);
+		EquippedWeapon->Fire();
 	}
 }
 

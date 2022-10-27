@@ -103,15 +103,6 @@ void ARemyCharacter::PlayFireMontage(bool bAiming) {
 
 	UAnimInstance * AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && FireWeaponMontage) {
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(
-				-1,
-				60.f,
-				FColor::Blue,
-				TEXT("Playing montage")
-			);
-		}
 		AnimInstance->Montage_Play(FireWeaponMontage);
 		FName SectionName;
 		SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
