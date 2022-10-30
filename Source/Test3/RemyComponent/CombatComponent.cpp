@@ -10,7 +10,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
-
+#include "Test3/PlayerController/RemyPlayerController.h"
+#include "Test3/HUD/RemyHUD.h"
 
 #include "Internationalization/Text.h"
 
@@ -19,7 +20,7 @@ UCombatComponent::UCombatComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
 
 	BaseWalkSpeed = 500.f;
 	AimWalkSpeed = 350.f;
@@ -49,6 +50,36 @@ void UCombatComponent::BeginPlay()
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	SetHUDCrosshairs(DeltaTime);
+
+}
+
+void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
+{
+	if (Character == nullptr || Character->Controller == nullptr) return;
+	Controller = Controller == nullptr ? Cast<ARemyPlayerController>(Character->Controller) : Controller;
+	if (Controller) {
+		HUD = HUD == nullptr ? Cast<ARemyHUD>(Controller->GetHUD()) : HUD;
+		if (HUD) {
+			FHUDPackage HUDPackage;
+			if (EquippedWeapon) {
+				HUDPackage.CrosshairsCenter = EquippedWeapon->CrosshairsCenter;
+				HUDPackage.CrosshairsTop = EquippedWeapon->CrosshairsTop;
+				HUDPackage.CrosshairsBottom = EquippedWeapon->CrosshairsBottom;
+				HUDPackage.CrosshairsLeft = EquippedWeapon->CrosshairsLeft;
+				HUDPackage.CrosshairsRight = EquippedWeapon->CrosshairsRight;
+			}
+			else {
+				HUDPackage.CrosshairsCenter = nullptr;
+				HUDPackage.CrosshairsTop = nullptr;
+				HUDPackage.CrosshairsBottom = nullptr;
+				HUDPackage.CrosshairsLeft = nullptr;
+				HUDPackage.CrosshairsRight = nullptr;
+			}
+			HUD->SetHUDPackage(HUDPackage);
+			
+		}
+	}
 
 }
 
@@ -121,6 +152,8 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 	}
 
 }
+
+
 
 
 

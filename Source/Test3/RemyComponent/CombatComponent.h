@@ -44,11 +44,13 @@ protected:
 	
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
+	void SetHUDCrosshairs(float DeltaTime);
+
 private:
 
 	class ARemyCharacter* Character;
-
-
+	class ARemyPlayerController * Controller;
+	class ARemyHUD* HUD;
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
 
