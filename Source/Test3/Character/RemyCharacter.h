@@ -4,11 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Test3/Interfaces/InteractWithCrosshairsInterface.h"
+
+
 #include "RemyCharacter.generated.h"
 
 
 UCLASS()
-class TEST3_API ARemyCharacter : public ACharacter
+class TEST3_API ARemyCharacter : public ACharacter, public IInteractWithCrosshairsInterface
 {
 	GENERATED_BODY()
 
@@ -87,4 +90,6 @@ public:
 	bool IsAiming();
 	AWeapon* GetEquippedWeapon();
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
+	FVector GetHitTarget() const;
+	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 };
