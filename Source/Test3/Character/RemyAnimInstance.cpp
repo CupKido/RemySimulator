@@ -65,7 +65,7 @@ void URemyAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		LeftHandTransform.SetRotation(FQuat(OutRotation));
 
 		if (RemyC->IsLocallyControlled()) {
-			bLocallyControlled = true; //Change to true
+			bLocallyControlled = false; //Change to true
 			FTransform RightHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("RightHand"), ERelativeTransformSpace::RTS_World);
 			FVector RightHandLocation = RightHandTransform.GetLocation();
 			/*FVector RightHandLocation = RightHandTransform.GetLocation().RotateAngleAxis(-90, FVector(0, 0, 1));

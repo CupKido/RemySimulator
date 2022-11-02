@@ -11,7 +11,7 @@
 #include "Test3/RemyComponent/CombatComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "RemyAnimInstance.h"
-
+#include "Test3/Test3.h"
 #include "Internationalization/Text.h"
 // Sets default values
 ARemyCharacter::ARemyCharacter()
@@ -41,6 +41,7 @@ ARemyCharacter::ARemyCharacter()
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 0.f, 850.f);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	SuperSpeed = 120000;
@@ -60,7 +61,7 @@ void ARemyCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	AimOffset(DeltaTime);
-
+	HideCameraIfCharacterClose();
 }
 
 void ARemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -110,6 +111,22 @@ void ARemyCharacter::PlayFireMontage(bool bAiming) {
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
+
+void ARemyCharacter::PlayHitReactMontage()
+{
+
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && HitReactMontage) {
+		AnimInstance->Montage_Play(HitReactMontage);
+		FName SectionName("FromFront");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+
+}
+
+
 //InputAction
 
 void ARemyCharacter::MoveForward(float Value) {
@@ -263,6 +280,29 @@ void ARemyCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon) {
 	{
 		LastWeapon->ShowPickupWidget(false);
 	}
+}
+
+void ARemyCharacter::HideCameraIfCharacterClose()
+{
+	if (!IsLocallyControlled()) return;
+
+	if ((FollowCamera->GetComponentLocation() - GetActorLocation()).Size() < CameraThreshold) {
+		GetMesh()->SetVisibility(false);
+		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh()) {
+			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+		}
+	}
+	else {
+		GetMesh()->SetVisibility(true);
+		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh()) {
+			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
+		}
+	}
+}
+
+void ARemyCharacter::MulticastHit_Implementation()
+{
+	PlayHitReactMontage();
 }
 
 
