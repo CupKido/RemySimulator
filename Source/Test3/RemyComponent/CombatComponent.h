@@ -37,6 +37,8 @@ protected:
 
 	void FireButtonPressed(bool bPressed);
 
+	void Fire();
+
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
 
@@ -78,6 +80,9 @@ private:
 	float CrosshairInAirFactor;
 	float CrosshairAimFactor;
 	float CrosshairShootingFactor;
+	float CrosshairOnPersonFactor;
+
+	bool bCrosshairOnPerson;
 
 	FVector HitTarget;
 
@@ -101,6 +106,17 @@ private:
 
 	void InterpFOV(float DeltaTime);
 
+
+	/** 
+	* Automatic Fire
+	*/
+
+	FTimerHandle FireTimer;
+
+	bool bCanFire = true;
+
+	void StartFireTimer();
+	void FireTimerFinished();
 
 public:	
 
