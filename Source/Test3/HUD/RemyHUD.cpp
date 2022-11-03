@@ -2,6 +2,25 @@
 
 
 #include "RemyHUD.h"
+#include "GameFramework/PlayerController.h"
+#include "Test3/HUD/CharacterOverlay.h"
+
+void ARemyHUD::BeginPlay()
+{
+	Super::BeginPlay();
+
+	AddCharacterOverlay();
+}
+
+void ARemyHUD::AddCharacterOverlay() 
+{
+	APlayerController* PlayerController = GetOwningPlayerController();
+	if (PlayerController && CharacterOverlayClass) {
+		CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController, CharacterOverlayClass);
+
+		CharacterOverlay->AddToViewport();
+	}
+}
 
 void ARemyHUD::DrawHUD() 
 {
