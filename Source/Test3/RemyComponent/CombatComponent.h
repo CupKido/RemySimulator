@@ -22,6 +22,7 @@ public:
 	friend class ARemyCharacter;
 
 	void EquipWeapon(AWeapon* WeaponToEquip);
+	void TempUnequipWeapon();
 protected:
 	virtual void BeginPlay() override;
 

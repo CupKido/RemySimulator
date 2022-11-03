@@ -12,6 +12,12 @@
 #include "Components/CapsuleComponent.h"
 #include "RemyAnimInstance.h"
 #include "Test3/Test3.h"
+#include "Test3/PlayerController/RemyPlayerController.h"
+
+
+
+
+
 #include "Internationalization/Text.h"
 // Sets default values
 ARemyCharacter::ARemyCharacter()
@@ -53,6 +59,21 @@ void ARemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	UpdateHUDHealth();
+	if (HasAuthority()) {
+		OnTakeAnyDamage.AddDynamic(this, &ARemyCharacter::ReceiveDamage);
+	}
+}
+
+void ARemyCharacter::UpdateHUDHealth()
+{
+	RemyPlayerController = RemyPlayerController == nullptr ? Cast<ARemyPlayerController>(Controller) : RemyPlayerController;
+	if (RemyPlayerController) {
+		RemyPlayerController->SetHUDHealth(Health, MaxHealth);
+	}
+	/*if (GEngine) {
+		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, RemyPlayerController ? TEXT("t") : TEXT("f"));
+	}*/
 }
 
 
@@ -301,15 +322,13 @@ void ARemyCharacter::HideCameraIfCharacterClose()
 	}
 }
 
-void ARemyCharacter::MulticastHit_Implementation()
-{
-	PlayHitReactMontage();
-}
 
 
 void ARemyCharacter::OnRep_Health()
 {
-
+	UpdateHUDHealth();
+	PlayHitReactMontage();
+	
 }
 
 void ARemyCharacter::SetOverlappingWeapon(AWeapon* Weapon) {
@@ -331,6 +350,29 @@ bool  ARemyCharacter::IsWeaponEquipped()
 
 bool ARemyCharacter::IsAiming() {
 	return (Combat && Combat->bAiming);
+}
+
+void ARemyCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
+{
+	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
+	if (Health < 1) {
+		if (Combat) {
+			Combat->TempUnequipWeapon();
+		}
+		TempRespawn();
+		Health = MaxHealth;
+	}
+	UpdateHUDHealth();
+	PlayHitReactMontage();
+	
+}
+
+void ARemyCharacter::TempRespawn()
+{
+	int x = rand() % 60000 - 30000;
+	int y = rand() % 60000 - 30000;
+	int z = rand() % 500 + 5000;
+	SetActorLocation(FVector(x, y, z));
 }
 
 void ARemyCharacter::ZoomInCamera()

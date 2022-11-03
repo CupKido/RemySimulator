@@ -75,7 +75,7 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 void UCombatComponent::FireButtonPressed(bool bPressed) {
 	bFireButtonPressed = bPressed;
-	if (bFireButtonPressed) {
+	if (bFireButtonPressed && EquippedWeapon) {
 		Fire();
 	}
 }
@@ -139,16 +139,31 @@ void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming) {
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if (Character == nullptr || WeaponToEquip == nullptr) return;
+	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
+	TempUnequipWeapon();
+
 
 	EquippedWeapon = WeaponToEquip;
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
+	
 	if (HandSocket) {
 		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
 	}
 	EquippedWeapon->SetOwner(Character);
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
+}
+
+void UCombatComponent::TempUnequipWeapon()
+{
+	if (EquippedWeapon) {
+		const FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, false);
+		EquippedWeapon->DetachFromActor(DetachRules);
+		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Dropped);
+		EquippedWeapon->SetOwner(nullptr);
+		EquippedWeapon = nullptr;
+		//EquippedWeapon->Destroy();
+	}
 }
 
 void UCombatComponent::OnRep_EquippedWeapon() {
@@ -189,7 +204,7 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 			{
 				Start += CrosshairWorldDirection * (DistanceToCharacter);
 			}
-			DrawDebugSphere(GetWorld(), Start, 16.f, 12, FColor::Red, false);
+			//DrawDebugSphere(GetWorld(), Start, 16.f, 12, FColor::Red, false);
 		}
 
 		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;

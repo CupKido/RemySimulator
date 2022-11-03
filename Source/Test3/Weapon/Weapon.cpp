@@ -93,6 +93,9 @@ void AWeapon::OnRep_WeaponState()
 		case EWeaponState::EWS_Equipped:
 			ShowPickupWidget(false);
 			break;
+		case EWeaponState::EWS_Dropped:
+			ShowPickupWidget(false);
+			break;
 	}
 }
 
@@ -108,6 +111,10 @@ void  AWeapon::SetWeaponState(EWeaponState State) {
 	case EWeaponState::EWS_Equipped:
 		ShowPickupWidget(false);
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		break;
+	case EWeaponState::EWS_Dropped:
+		ShowPickupWidget(true);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		break;
 	}
 }

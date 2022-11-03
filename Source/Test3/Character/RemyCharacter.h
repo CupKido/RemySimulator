@@ -29,11 +29,10 @@ public:
 	void PlayFireMontage(bool bAiming);
 
 
-	UFUNCTION(NetMulticast, Unreliable)
-	void MulticastHit();
-
 protected:
 	virtual void BeginPlay() override;
+
+
 	 
 	//Input funcs
 	void MoveForward(float Value);
@@ -53,6 +52,11 @@ protected:
 
 	void PlayHitReactMontage();
 
+	// Health Actions
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor * DamageCauser);
+	void TempRespawn();
+	void UpdateHUDHealth();
 
 	void ZoomInCamera();
 	void ZoomOutCamera();
@@ -114,6 +118,8 @@ private:
 
 	UFUNCTION()
 	void OnRep_Health();
+
+	class ARemyPlayerController* RemyPlayerController;
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
