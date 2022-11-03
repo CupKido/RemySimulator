@@ -153,7 +153,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	Character->bUseControllerRotationYaw = true;
 }
 
-
+//Replicated func
 void UCombatComponent::OnRep_EquippedWeapon() {
 	if (EquippedWeapon && Character) {
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
