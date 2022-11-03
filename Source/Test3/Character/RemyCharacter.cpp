@@ -270,7 +270,6 @@ void ARemyCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(ARemyCharacter, OverlappingWeapon, COND_OwnerOnly);
-	DOREPLIFETIME(ARemyCharacter, Health);
 }
 
 void ARemyCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon) {
@@ -306,11 +305,6 @@ void ARemyCharacter::MulticastHit_Implementation()
 	PlayHitReactMontage();
 }
 
-
-void ARemyCharacter::OnRep_Health()
-{
-
-}
 
 void ARemyCharacter::SetOverlappingWeapon(AWeapon* Weapon) {
 	if (OverlappingWeapon) {
