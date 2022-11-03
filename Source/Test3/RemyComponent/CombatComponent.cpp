@@ -161,7 +161,7 @@ void UCombatComponent::TempUnequipWeapon()
 		EquippedWeapon->DetachFromActor(DetachRules);
 		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Dropped);
 		EquippedWeapon->SetOwner(nullptr);
-		EquippedWeapon = nullptr;
+		//EquippedWeapon = nullptr;
 		//EquippedWeapon->Destroy();
 	}
 }
@@ -199,6 +199,9 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 			
 			if (DistanceToCharacter < 145) {
 				Start += CrosshairWorldDirection * (DistanceToCharacter * 5);
+			}
+			else if (DistanceToCharacter < 250) {
+				Start += CrosshairWorldDirection * (DistanceToCharacter * 3);
 			}
 			else
 			{
