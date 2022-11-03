@@ -355,24 +355,9 @@ bool ARemyCharacter::IsAiming() {
 void ARemyCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
 {
 	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
-	if (Health < 1) {
-		if (Combat) {
-			Combat->TempUnequipWeapon();
-		}
-		TempRespawn();
-		Health = MaxHealth;
-	}
 	UpdateHUDHealth();
 	PlayHitReactMontage();
 	
-}
-
-void ARemyCharacter::TempRespawn()
-{
-	int x = rand() % 60000 - 30000;
-	int y = rand() % 60000 - 30000;
-	int z = rand() % 500 + 5000;
-	SetActorLocation(FVector(x, y, z));
 }
 
 void ARemyCharacter::ZoomInCamera()

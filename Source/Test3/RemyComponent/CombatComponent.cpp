@@ -140,7 +140,6 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if (Character == nullptr || WeaponToEquip == nullptr) return;
 	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
-	TempUnequipWeapon();
 
 
 	EquippedWeapon = WeaponToEquip;
@@ -154,17 +153,6 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	Character->bUseControllerRotationYaw = true;
 }
 
-void UCombatComponent::TempUnequipWeapon()
-{
-	if (EquippedWeapon) {
-		const FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, false);
-		EquippedWeapon->DetachFromActor(DetachRules);
-		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Dropped);
-		EquippedWeapon->SetOwner(nullptr);
-		//EquippedWeapon = nullptr;
-		//EquippedWeapon->Destroy();
-	}
-}
 
 void UCombatComponent::OnRep_EquippedWeapon() {
 	if (EquippedWeapon && Character) {
