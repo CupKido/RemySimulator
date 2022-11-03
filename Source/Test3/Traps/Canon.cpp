@@ -20,6 +20,7 @@ ACanon::ACanon()
 
 	TCanon = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Canon"));
 	TCanon->SetupAttachment(GunMechineMesh, TEXT("CanonSocket"));
+	TCanon->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 
 	Target1 = CreateDefaultSubobject<USceneComponent>(TEXT("Target1"));
 	Target1->SetupAttachment(Root);
