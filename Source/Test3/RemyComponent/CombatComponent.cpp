@@ -82,9 +82,6 @@ void UCombatComponent::FireButtonPressed(bool bPressed) {
 
 void UCombatComponent::Fire()
 {
-	if (GEngine) {
-		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, bCanFire ? TEXT("true") : TEXT("false"));
-	}
 	if (bCanFire) {
 		bCanFire = false;
 		ServerFire(HitTarget);
@@ -184,8 +181,15 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		if (Character)
 		{
 			float DistanceToCharacter = (Character->GetActorLocation() - Start).Size();
-			Start += CrosshairWorldDirection * (DistanceToCharacter);
-			//DrawDebugSphere(GetWorld(), Start, 16.f, 12, FColor::Red, false);
+			
+			if (DistanceToCharacter < 145) {
+				Start += CrosshairWorldDirection * (DistanceToCharacter * 5);
+			}
+			else
+			{
+				Start += CrosshairWorldDirection * (DistanceToCharacter);
+			}
+			DrawDebugSphere(GetWorld(), Start, 16.f, 12, FColor::Red, false);
 		}
 
 		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
