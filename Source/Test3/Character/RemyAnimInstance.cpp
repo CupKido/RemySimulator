@@ -36,6 +36,7 @@ void URemyAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	EquippedWeapon = RemyC->GetEquippedWeapon();
 	bIsCrouched = RemyC->bIsCrouched;
 	bAiming = RemyC->IsAiming();
+	bElimmed = RemyC->IsElimmed();
 
 	//OffsetYaw for strafing
 	FRotator AimRotation = RemyC->GetBaseAimRotation();

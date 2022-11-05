@@ -13,8 +13,12 @@
 #include "RemyAnimInstance.h"
 #include "Test3/Test3.h"
 #include "Test3/PlayerController/RemyPlayerController.h"
-
-
+#include "Test3/GameMode/RemyGameMode.h"
+#include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "Test3/PlayerState/RemyPlayerState.h"
 
 
 
@@ -24,7 +28,7 @@ ARemyCharacter::ARemyCharacter()
 {
 
 	PrimaryActorTick.bCanEverTick = true;
-
+	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(GetMesh());
 	CameraBoom->TargetArmLength = 500.f;
@@ -53,6 +57,16 @@ ARemyCharacter::ARemyCharacter()
 	SuperSpeed = 120000;
 	NetUpdateFrequency = 66.f;
 	MinNetUpdateFrequency = 33.f;
+
+	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimelineComponent"));
+}
+
+void ARemyCharacter::Destroyed() {
+	Super::Destroyed();
+
+	if (ElimBotComponent) {
+		ElimBotComponent->DestroyComponent();
+	}
 }
 
 void ARemyCharacter::BeginPlay()
@@ -83,6 +97,7 @@ void ARemyCharacter::Tick(float DeltaTime)
 
 	AimOffset(DeltaTime);
 	HideCameraIfCharacterClose();
+	PollInit();
 }
 
 void ARemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -131,6 +146,93 @@ void ARemyCharacter::PlayFireMontage(bool bAiming) {
 		SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
+}
+
+void ARemyCharacter::PlayElimMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ElimMontage) {
+		AnimInstance->Montage_Play(ElimMontage);
+	}
+}
+
+void ARemyCharacter::Elim()
+{
+	if (Combat && Combat->EquippedWeapon) {
+		Combat->EquippedWeapon->Dropped();
+	}
+	MulticastElim();
+	GetWorldTimerManager().SetTimer(
+		ElimTimer,
+		this,
+		&ARemyCharacter::ElimTimerFinished,
+		ElimDelay
+	);
+}
+
+
+void ARemyCharacter::MulticastElim_Implementation()
+{
+	bElimmed = true;
+	PlayElimMontage();
+
+	// Start Dissolve effect
+	bool InstancesAreOK = DissolveMaterialInstanceShoe && DissolveMaterialInstanceTop && DissolveMaterialInstanceBottom && DissolveMaterialInstanceHair && DissolveMaterialInstanceBody && DissolveMaterialInstanceEyelash;
+	if (InstancesAreOK) {
+		DynamicDissolveMaterialInstanceShoe = UMaterialInstanceDynamic::Create(DissolveMaterialInstanceShoe, this);
+		DynamicDissolveMaterialInstanceTop = UMaterialInstanceDynamic::Create(DissolveMaterialInstanceTop, this);
+		DynamicDissolveMaterialInstanceBottom = UMaterialInstanceDynamic::Create(DissolveMaterialInstanceBottom, this);
+		DynamicDissolveMaterialInstanceHair = UMaterialInstanceDynamic::Create(DissolveMaterialInstanceHair, this);
+		DynamicDissolveMaterialInstanceBody = UMaterialInstanceDynamic::Create(DissolveMaterialInstanceBody, this);
+		DynamicDissolveMaterialInstanceEyelash = UMaterialInstanceDynamic::Create(DissolveMaterialInstanceEyelash, this);
+		SetDynamicDissolveMatInstance(DynamicDissolveMaterialInstanceShoe, 0);
+		SetDynamicDissolveMatInstance(DynamicDissolveMaterialInstanceTop, 1);
+		SetDynamicDissolveMatInstance(DynamicDissolveMaterialInstanceBottom, 2);
+		SetDynamicDissolveMatInstance(DynamicDissolveMaterialInstanceHair, 3);
+		SetDynamicDissolveMatInstance(DynamicDissolveMaterialInstanceBody, 4);
+		SetDynamicDissolveMatInstance(DynamicDissolveMaterialInstanceEyelash, 5);
+	}
+	
+	StartDissolve();
+	
+	// Disable character movement
+	GetCharacterMovement()->DisableMovement();
+	GetCharacterMovement()->StopMovementImmediately();
+	if (RemyPlayerController) {
+		DisableInput(RemyPlayerController);
+	}
+
+
+	//Disable Collision
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	// Spawn Elim Bot
+	if (ElimBotEffect)
+	{
+		FVector ElimBotSpawnPoint = GetActorLocation() + FVector(0,0,200);
+		ElimBotComponent = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ElimBotEffect, ElimBotSpawnPoint, GetActorRotation());
+
+	}
+	if (ElimBotSound) {
+		UGameplayStatics::SpawnSoundAtLocation(this, ElimBotSound, GetActorLocation());
+	}
+}
+
+void ARemyCharacter::SetDynamicDissolveMatInstance(UMaterialInstanceDynamic* DynamicDissolveMaterialInstance, int index) {
+	GetMesh()->SetMaterial(index, DynamicDissolveMaterialInstance);
+	DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), 0.55f);
+	DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Glow"), 200.f);
+	
+}
+
+void ARemyCharacter::ElimTimerFinished()
+{
+	ARemyGameMode* RemyGameMode = GetWorld()->GetAuthGameMode<ARemyGameMode>();
+	if (RemyGameMode) {
+		RemyGameMode->RequestRespawn(this, Controller);
+	}
+	bElimmed = false;
 }
 
 void ARemyCharacter::PlayHitReactMontage()
@@ -322,12 +424,45 @@ void ARemyCharacter::HideCameraIfCharacterClose()
 	}
 }
 
+void ARemyCharacter::PollInit() {
+	if (RemyPlayerState == nullptr) {
+		RemyPlayerState = GetPlayerState<ARemyPlayerState>();
+		if (RemyPlayerState) {
+			RemyPlayerState->AddToScore(0.f);
+		}
+	}
+}
 
-
-void ARemyCharacter::OnRep_Health()
+void ARemyCharacter::UpdateDissolveMaterial(float DissolveValue)
 {
-	UpdateHUDHealth();
-	PlayHitReactMontage();
+
+	SetDynamicScalarParameterValueDissolve(DynamicDissolveMaterialInstanceShoe, DissolveValue);
+	SetDynamicScalarParameterValueDissolve(DynamicDissolveMaterialInstanceTop, DissolveValue);
+	SetDynamicScalarParameterValueDissolve(DynamicDissolveMaterialInstanceBottom, DissolveValue);
+	SetDynamicScalarParameterValueDissolve(DynamicDissolveMaterialInstanceHair, DissolveValue);
+	SetDynamicScalarParameterValueDissolve(DynamicDissolveMaterialInstanceBody, DissolveValue);
+	SetDynamicScalarParameterValueDissolve(DynamicDissolveMaterialInstanceEyelash, DissolveValue);
+	
+}
+
+void ARemyCharacter::SetDynamicScalarParameterValueDissolve(UMaterialInstanceDynamic* DynamicDissolveMaterialInstance, float DissolveValue) {
+	/*if (GEngine) {
+		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, DynamicDissolveMaterialInstance ? TEXT("Dissolving") : TEXT("not Dissolving"));
+	}*/
+	if (DynamicDissolveMaterialInstance) {
+		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), DissolveValue);
+	}
+}
+
+void ARemyCharacter::StartDissolve()
+{
+	
+	DissolveTrack.BindDynamic(this, &ARemyCharacter::UpdateDissolveMaterial);
+	
+	if (DissolveCurve && DissolveTimeline) {
+		DissolveTimeline->AddInterpFloat(DissolveCurve, DissolveTrack);
+		DissolveTimeline->Play();
+	}
 	
 }
 
@@ -357,7 +492,22 @@ void ARemyCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDa
 	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
 	UpdateHUDHealth();
 	PlayHitReactMontage();
+	if (Health < 0.5f && !bElimmed) {
+		ARemyGameMode* RemyGameMode = GetWorld()->GetAuthGameMode<ARemyGameMode>();
+		if (RemyGameMode) {
+			RemyPlayerController = RemyPlayerController == nullptr ? Cast<ARemyPlayerController>(Controller) : RemyPlayerController;
+			ARemyPlayerController* AttackerController = Cast<ARemyPlayerController>(InstigatorController);
+			RemyGameMode->PlayerEliminated(this, RemyPlayerController, AttackerController);
+		}
+	}
 	
+}
+
+void ARemyCharacter::OnRep_Health()
+{
+	UpdateHUDHealth();
+	PlayHitReactMontage();
+
 }
 
 void ARemyCharacter::ZoomInCamera()

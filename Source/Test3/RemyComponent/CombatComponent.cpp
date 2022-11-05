@@ -138,13 +138,14 @@ void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming) {
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
-	if (Character == nullptr || WeaponToEquip == nullptr) return;
-	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
 
+	if (Character == nullptr || WeaponToEquip == nullptr) return;
+	if (EquippedWeapon) EquippedWeapon->Dropped();
 
 	EquippedWeapon = WeaponToEquip;
+	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-	
+
 	if (HandSocket) {
 		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
 	}
@@ -156,6 +157,13 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 //Replicated func
 void UCombatComponent::OnRep_EquippedWeapon() {
 	if (EquippedWeapon && Character) {
+
+		const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
+		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+
+		if (HandSocket) {
+			HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
+		}
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
 	}

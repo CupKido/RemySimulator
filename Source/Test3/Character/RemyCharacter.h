@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Test3/Interfaces/InteractWithCrosshairsInterface.h"
-
+#include "Components/TimelineComponent.h"
 
 #include "RemyCharacter.generated.h"
 
@@ -27,8 +27,13 @@ public:
 	virtual void PostInitializeComponents() override;
 
 	void PlayFireMontage(bool bAiming);
+	void PlayElimMontage();
 
+	void Elim();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastElim();
+	virtual void Destroyed() override;
 protected:
 	virtual void BeginPlay() override;
 
@@ -55,8 +60,9 @@ protected:
 	// Health Actions
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor * DamageCauser);
-	void TempRespawn();
 	void UpdateHUDHealth();
+	// poll for any relevant class and initialize HUD
+	void PollInit();
 
 	void ZoomInCamera();
 	void ZoomOutCamera();
@@ -66,10 +72,10 @@ protected:
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
-		class USpringArmComponent* CameraBoom;
+	class USpringArmComponent* CameraBoom;
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
-		class UCameraComponent* FollowCamera;
+	class UCameraComponent* FollowCamera;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"));
 	class UWidgetComponent* OverheadWidget;
@@ -99,6 +105,9 @@ private:
 	class UAnimMontage* FireWeaponMontage;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* ElimMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* HitReactMontage;
 
 	void HideCameraIfCharacterClose();
@@ -121,6 +130,91 @@ private:
 
 	class ARemyPlayerController* RemyPlayerController;
 
+	bool bElimmed = false;
+
+	FTimerHandle ElimTimer;
+
+	UPROPERTY(EditDefaultsOnly)
+	float ElimDelay = 2.2f;
+
+	void ElimTimerFinished();
+
+	/** 
+	*	Dissolve effect
+	*/
+
+	UPROPERTY(VisibleAnywhere)
+	UTimelineComponent* DissolveTimeline;
+
+	FOnTimelineFloat DissolveTrack;
+
+	UFUNCTION()
+	void UpdateDissolveMaterial(float DissolveValue);
+
+	UFUNCTION()
+	void StartDissolve();
+
+	UPROPERTY(EditAnywhere)
+	UCurveFloat* DissolveCurve;
+
+	void SetDynamicScalarParameterValueDissolve(UMaterialInstanceDynamic* DynamicDissolveMaterialInstance, float DissolveValue);
+
+	void SetDynamicDissolveMatInstance(UMaterialInstanceDynamic* DynamicDissolveMaterialInstance, int index);
+
+	//instance that we can change at runtime
+	UPROPERTY(VisibleAnywhere, Category = Elim)
+	UMaterialInstanceDynamic* DynamicDissolveMaterialInstanceShoe;
+
+	UPROPERTY(VisibleAnywhere, Category = Elim)
+	UMaterialInstanceDynamic* DynamicDissolveMaterialInstanceTop;
+
+	UPROPERTY(VisibleAnywhere, Category = Elim)
+	UMaterialInstanceDynamic* DynamicDissolveMaterialInstanceBottom;
+
+	UPROPERTY(VisibleAnywhere, Category = Elim)
+	UMaterialInstanceDynamic* DynamicDissolveMaterialInstanceHair;
+
+	UPROPERTY(VisibleAnywhere, Category = Elim)
+	UMaterialInstanceDynamic* DynamicDissolveMaterialInstanceBody;
+
+	UPROPERTY(VisibleAnywhere, Category = Elim)
+	UMaterialInstanceDynamic* DynamicDissolveMaterialInstanceEyelash;
+
+
+	//instance set on blueprint, used with dynamic instance
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* DissolveMaterialInstanceShoe;
+
+	UPROPERTY(EditAnywhere, Category = Elim)
+		UMaterialInstance* DissolveMaterialInstanceTop;
+
+	UPROPERTY(EditAnywhere, Category = Elim)
+		UMaterialInstance* DissolveMaterialInstanceBottom;
+
+	UPROPERTY(EditAnywhere, Category = Elim)
+		UMaterialInstance* DissolveMaterialInstanceHair;
+
+	UPROPERTY(EditAnywhere, Category = Elim)
+		UMaterialInstance* DissolveMaterialInstanceBody;
+
+	UPROPERTY(EditAnywhere, Category = Elim)
+		UMaterialInstance* DissolveMaterialInstanceEyelash;
+
+	/** 
+	* Elim bot
+	*/
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* ElimBotEffect;
+
+	UPROPERTY(VisibleAnywhere)
+	UParticleSystemComponent* ElimBotComponent;
+
+	UPROPERTY(EditAnywhere)
+	class USoundCue* ElimBotSound;
+
+	class ARemyPlayerState * RemyPlayerState;
+
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
@@ -129,4 +223,7 @@ public:
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	FVector GetHitTarget() const;
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE bool IsElimmed() const { return bElimmed; }
+	FORCEINLINE float GetHealth() const { return Health; }
+	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 };
