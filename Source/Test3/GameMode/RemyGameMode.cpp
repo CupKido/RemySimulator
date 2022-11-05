@@ -14,7 +14,11 @@ void ARemyGameMode::PlayerEliminated(class ARemyCharacter* ElimmedCharacter, cla
 	ARemyPlayerState* VictimPlayerState = VictimController ? Cast<ARemyPlayerState>(VictimController->PlayerState) : nullptr;
 	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState)
 	{
-		AttackerPlayerState->AddToScore(1.f);
+		AttackerPlayerState->AddToScore(1.f);	
+	}
+	if (VictimPlayerState)
+	{
+		VictimPlayerState->AddToDefeats(1);
 	}
 	if(ElimmedCharacter){
 		ElimmedCharacter->Elim();

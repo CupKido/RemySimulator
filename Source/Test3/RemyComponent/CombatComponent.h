@@ -52,8 +52,11 @@ protected:
 
 private:
 
+	UPROPERTY()
 	class ARemyCharacter* Character;
+	UPROPERTY()
 	class ARemyPlayerController * Controller;
+	UPROPERTY()
 	class ARemyHUD* HUD;
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;

@@ -16,10 +16,12 @@ class TEST3_API ARemyPlayerController : public APlayerController
 public:
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDScore(float Score);
+	void SetHUDDefeats(int32 Defeats);
 	virtual void OnPossess(APawn* InPawn) override;
 protected:
 	virtual void BeginPlay() override;
 
 private:
+	UPROPERTY()
 	class ARemyHUD* RemyHUD;
 };

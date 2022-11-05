@@ -44,3 +44,14 @@ void ARemyPlayerController::SetHUDScore(float Score) {
 	}
 }
 
+void ARemyPlayerController::SetHUDDefeats(int32 Defeats) {
+	RemyHUD = RemyHUD == nullptr ? Cast<ARemyHUD>(GetHUD()) : RemyHUD;
+	bool bHUDValid = RemyHUD &&
+		RemyHUD->CharacterOverlay &&
+		RemyHUD->CharacterOverlay->DefeatsAmount;
+	if (bHUDValid) {
+		FString DefeatsText = FString::Printf(TEXT("%d"), Defeats);
+		RemyHUD->CharacterOverlay->DefeatsAmount->SetText(FText::FromString(DefeatsText));
+	}
+}
+

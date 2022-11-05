@@ -33,6 +33,7 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastElim();
+
 	virtual void Destroyed() override;
 protected:
 	virtual void BeginPlay() override;
@@ -128,6 +129,7 @@ private:
 	UFUNCTION()
 	void OnRep_Health();
 
+	UPROPERTY()
 	class ARemyPlayerController* RemyPlayerController;
 
 	bool bElimmed = false;
@@ -213,6 +215,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	class USoundCue* ElimBotSound;
 
+	UPROPERTY()
 	class ARemyPlayerState * RemyPlayerState;
 
 public:

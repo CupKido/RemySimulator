@@ -429,6 +429,7 @@ void ARemyCharacter::PollInit() {
 		RemyPlayerState = GetPlayerState<ARemyPlayerState>();
 		if (RemyPlayerState) {
 			RemyPlayerState->AddToScore(0.f);
+			RemyPlayerState->AddToDefeats(0);
 		}
 	}
 }
