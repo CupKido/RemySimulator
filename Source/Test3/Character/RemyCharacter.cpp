@@ -117,7 +117,7 @@ void ARemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Aim", IE_Released, this, &ARemyCharacter::AimButtonReleased);
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ARemyCharacter::FireButtonPressed);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ARemyCharacter::FireButtonReleased);
-
+	
 
 	
 	PlayerInputComponent->BindAction("ZoomInCamera", IE_Pressed, this, &ARemyCharacter::ZoomInCamera);
@@ -125,7 +125,8 @@ void ARemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("SuperSpeed", IE_Pressed, this, &ARemyCharacter::SpeedPressed);
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ARemyCharacter::SprintPressed);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ARemyCharacter::SprintPressed);
-
+	PlayerInputComponent->BindAction("SaluteEmote", IE_Pressed, this, &ARemyCharacter::PlaySaluteMontage);
+	PlayerInputComponent->BindAction("SadEmote", IE_Pressed, this, &ARemyCharacter::PlaySadMontage);
 
 }
 
@@ -154,6 +155,25 @@ void ARemyCharacter::PlayElimMontage()
 	if (AnimInstance && ElimMontage) {
 		AnimInstance->Montage_Play(ElimMontage);
 	}
+}
+
+
+void ARemyCharacter::MultiCastPlayEmoteMontage_Implementation(UAnimMontage* EmoteMontage)
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && EmoteMontage) {
+		AnimInstance->Montage_Play(EmoteMontage);
+	}
+}
+
+void ARemyCharacter::PlaySaluteMontage()
+{
+	MultiCastPlayEmoteMontage(SaluteEmoteMontage);
+}
+
+void ARemyCharacter::PlaySadMontage()
+{
+	MultiCastPlayEmoteMontage(SadEmoteMontage);
 }
 
 void ARemyCharacter::Elim()

@@ -29,6 +29,11 @@ public:
 	void PlayFireMontage(bool bAiming);
 	void PlayElimMontage();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MultiCastPlayEmoteMontage(UAnimMontage* EmoteMontage);
+
+	void PlaySaluteMontage();
+	void PlaySadMontage();
 	void Elim();
 
 	UFUNCTION(NetMulticast, Reliable)
@@ -77,6 +82,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class UCameraComponent* FollowCamera;
+
+	UPROPERTY(VisibleAnywhere, Category = Camera)
+	class UCameraComponent* FirstPersonCamera;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"));
 	class UWidgetComponent* OverheadWidget;
@@ -217,6 +225,16 @@ private:
 
 	UPROPERTY()
 	class ARemyPlayerState * RemyPlayerState;
+
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* SadEmoteMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* HappyEmoteMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* SaluteEmoteMontage;
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
