@@ -10,7 +10,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Casing.h"
 #include "Engine/SkeletalMeshSocket.h"
-
+#include "Test3/PlayerController/RemyPlayerController.h"
 
 
 // Sets default values
@@ -38,10 +38,9 @@ AWeapon::AWeapon()
 	PickupWidget->SetupAttachment(RootComponent);
 }
 
-
 void AWeapon::BeginPlay()
 {
-	
+
 	Super::BeginPlay();
 	if (HasAuthority()) {
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -64,6 +63,42 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState);
+	DOREPLIFETIME(AWeapon, Ammo);
+}
+
+void AWeapon::SetHUDAmmo()
+{
+	RemyOwnerCharacter = RemyOwnerCharacter == nullptr ? Cast<ARemyCharacter>(GetOwner()) : RemyOwnerCharacter;
+	if (RemyOwnerCharacter) {
+		RemyOwnerController = RemyOwnerController == nullptr ? Cast<ARemyPlayerController>(RemyOwnerCharacter->Controller) : RemyOwnerController;
+		if (RemyOwnerController) {
+			RemyOwnerController->SetHUDWeaponAmmo(Ammo, MagCapacity);
+		}
+	}
+}
+
+void AWeapon::SpendRound()
+{
+	
+	Ammo = FMath::Clamp(Ammo - 1, 0, MagCapacity);
+	SetHUDAmmo();
+}
+
+void AWeapon::OnRep_Ammo()
+{
+	SetHUDAmmo();
+}
+
+void AWeapon::OnRep_Owner()
+{
+	Super::OnRep_Owner();
+	if (Owner == nullptr) {
+		RemyOwnerCharacter = nullptr;
+		RemyOwnerController = nullptr;
+	}
+	else {
+		SetHUDAmmo();
+	}
 }
 
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) 
@@ -153,6 +188,7 @@ void AWeapon::Fire(const FVector& HitTarget) {
 			}
 		}
 	}
+	SpendRound();
 }
 
 void AWeapon::Dropped()
@@ -161,4 +197,10 @@ void AWeapon::Dropped()
 	FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);
 	WeaponMesh->DetachFromComponent(DetachRules);
 	SetOwner(nullptr);
+	RemyOwnerCharacter = nullptr;
+	RemyOwnerController = nullptr;
+}
+
+bool AWeapon::IsEmpty() {
+	return Ammo <= 0;
 }

@@ -173,6 +173,10 @@ void ARemyCharacter::Elim()
 
 void ARemyCharacter::MulticastElim_Implementation()
 {
+	if (RemyPlayerController)
+	{
+		RemyPlayerController->SetHUDWeaponAmmo(0);
+	}
 	bElimmed = true;
 	PlayElimMontage();
 

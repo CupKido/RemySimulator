@@ -55,3 +55,31 @@ void ARemyPlayerController::SetHUDDefeats(int32 Defeats) {
 	}
 }
 
+void ARemyPlayerController::SetHUDWeaponAmmo(int32 Ammo, int32 Capacity)
+{
+	RemyHUD = RemyHUD == nullptr ? Cast<ARemyHUD>(GetHUD()) : RemyHUD;
+	bool bHUDValid = RemyHUD &&
+		RemyHUD->CharacterOverlay &&
+		RemyHUD->CharacterOverlay->WeaponAmmoAmount && RemyHUD->CharacterOverlay->WeaponAmmoBar;
+	if (bHUDValid) {
+		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
+		RemyHUD->CharacterOverlay->WeaponAmmoAmount->SetText(FText::FromString(AmmoText));
+		if (Capacity != 0)
+		{
+			const float AmmoPercent = (float)Ammo / (float)Capacity;
+			RemyHUD->CharacterOverlay->WeaponAmmoBar->SetPercent(AmmoPercent);
+		}
+	}
+}
+
+void ARemyPlayerController::SetHUDCarriedAmmo(int32 Ammo)
+{
+	RemyHUD = RemyHUD == nullptr ? Cast<ARemyHUD>(GetHUD()) : RemyHUD;
+	bool bHUDValid = RemyHUD &&
+		RemyHUD->CharacterOverlay &&
+		RemyHUD->CharacterOverlay->CarriedAmmoAmount;
+	if (bHUDValid) {
+		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
+		RemyHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString(AmmoText));
+	}
+}

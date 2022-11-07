@@ -35,6 +35,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	DOREPLIFETIME(UCombatComponent, bAiming);
+	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly);
 }
 
 // Called when the game starts
@@ -82,7 +83,7 @@ void UCombatComponent::FireButtonPressed(bool bPressed) {
 
 void UCombatComponent::Fire()
 {
-	if (bCanFire) {
+	if (CanFire()) {
 		bCanFire = false;
 		ServerFire(HitTarget);
 
@@ -150,6 +151,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
 	}
 	EquippedWeapon->SetOwner(Character);
+	EquippedWeapon->SetHUDAmmo();
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
 }
@@ -331,4 +333,14 @@ void UCombatComponent::SetAiming(bool bIsAiming) {
 		ServerSetAiming(bIsAiming);
 
 	}
+}
+
+bool UCombatComponent::CanFire() {
+	if (EquippedWeapon == nullptr) return false;
+	return !EquippedWeapon->IsEmpty() && bCanFire;
+}
+
+void UCombatComponent::OnRep_CarriedAmmo()
+{
+
 }

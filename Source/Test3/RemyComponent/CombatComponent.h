@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Test3/HUD/RemyHUD.h"
+#include "Test3/Weapon/WeaponTypes.h"
 #include "CombatComponent.generated.h"
 
 class AWeapon;
@@ -122,6 +123,16 @@ private:
 	void StartFireTimer();
 	void FireTimerFinished();
 
+	bool CanFire();
+
+	// Carried ammo for the currently equipped weapon
+	UPROPERTY(ReplicatedUsing = OnRep_CarriedAmmo)
+	int32 CarriedAmmo;
+
+	UFUNCTION()
+	void OnRep_CarriedAmmo();
+
+	TMap<EWeaponType, int32> CarriedAmmoMap;
 public:	
 
 		
