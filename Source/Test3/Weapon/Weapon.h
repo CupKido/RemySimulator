@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "WeaponTypes.h"
 #include "Weapon.generated.h"
 
 UENUM(BlueprintType)
@@ -31,6 +32,7 @@ public:
 	void ShowPickupWidget(bool bShowWidget);
 	virtual void Fire(const FVector& HitTarget);
 	void Dropped();
+	void AddAmmo(int32 AmmoToAdd);
 	/**
 	* Textures for the weapon crosshairs
 	*/
@@ -88,6 +90,7 @@ public:
 	UPROPERTY()
 	class ARemyPlayerController* RemyOwnerController;
 
+
 protected:
 
 
@@ -134,7 +137,8 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ACasing> CasingClass;
 
-
+	UPROPERTY(EditAnywhere)
+	EWeaponType WeaponType;
 
 
 public:	
@@ -145,4 +149,7 @@ public:
 	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
 	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
 	bool IsEmpty();
+	FORCEINLINE EWeaponType GetWeaponType() { return WeaponType; }
+	FORCEINLINE int32 GetAmmo() const { return Ammo;  }
+	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity;  }
 };

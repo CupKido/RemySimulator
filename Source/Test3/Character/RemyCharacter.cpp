@@ -19,7 +19,7 @@
 #include "Sound/SoundCue.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Test3/PlayerState/RemyPlayerState.h"
-
+#include "Test3/Weapon/WeaponTypes.h"
 
 
 #include "Internationalization/Text.h"
@@ -117,7 +117,7 @@ void ARemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Aim", IE_Released, this, &ARemyCharacter::AimButtonReleased);
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ARemyCharacter::FireButtonPressed);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ARemyCharacter::FireButtonReleased);
-
+	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ARemyCharacter::ReloadButtonPressed);
 
 	
 	PlayerInputComponent->BindAction("ZoomInCamera", IE_Pressed, this, &ARemyCharacter::ZoomInCamera);
@@ -144,6 +144,23 @@ void ARemyCharacter::PlayFireMontage(bool bAiming) {
 		AnimInstance->Montage_Play(FireWeaponMontage);
 		FName SectionName;
 		SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
+void ARemyCharacter::PlayReloadMontage()
+{
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ReloadMontage) {
+		AnimInstance->Montage_Play(ReloadMontage);
+		FName SectionName;
+		switch (Combat->EquippedWeapon->GetWeaponType()) {
+		case EWeaponType::EWT_AssultRifle:
+			SectionName = FName("Rifle");
+			break;
+		}
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
@@ -311,6 +328,13 @@ void ARemyCharacter::CrouchButtonPressed()
 	}
 	else {
 		Crouch();
+	}
+}
+
+void ARemyCharacter::ReloadButtonPressed()
+{
+	if (Combat) {
+		Combat->Reload();
 	}
 }
 
@@ -544,4 +568,13 @@ FVector ARemyCharacter::GetHitTarget() const {
 	if (Combat == nullptr) return FVector();
 
 	return Combat->HitTarget;
+}
+
+ECombatState ARemyCharacter::GetCombatState() const
+{
+	
+	if (Combat == nullptr) return ECombatState::ECS_MAX;
+	
+	return Combat->CombatState;
+	
 }

@@ -6,6 +6,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Test3/Weapon/Weapon.h"
+#include "Test3/RemyTypes/CombatState.h"
 
 void URemyAnimInstance::NativeInitializeAnimation()
 {
@@ -55,6 +56,7 @@ void URemyAnimInstance::NativeUpdateAnimation(float DeltaTime)
 
 	AO_Pitch = RemyC->GetAO_Pitch();
 	
+	bUseFabrik = RemyC->GetCombatState() != ECombatState::ECS_Reloading;
 
 	if (bWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeaponMesh() && RemyC->GetMesh())
 	{
@@ -72,9 +74,14 @@ void URemyAnimInstance::NativeUpdateAnimation(float DeltaTime)
 			FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(RightHandLocation, RemyC->GetHitTarget());
 			LookAtRotation.Add(90, 0 , 0);
 			LookAtRotation.Add(0, 0, -90);
-			RightHandRotation = FMath::RInterpTo(RightHandRotation, LookAtRotation, DeltaTime, 25.f);
+			RightHandRotation = FMath::RInterpTo(RightHandRotation, LookAtRotation, DeltaTime, 55.f);
+		}
+		else {
+
 		}
 		
 
 	}
+
+	
 }

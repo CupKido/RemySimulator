@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "Test3/HUD/RemyHUD.h"
 #include "Test3/Weapon/WeaponTypes.h"
+#include "Test3/RemyTypes/CombatState.h"
 #include "CombatComponent.generated.h"
 
 class AWeapon;
@@ -23,7 +24,9 @@ public:
 	friend class ARemyCharacter;
 
 	void EquipWeapon(AWeapon* WeaponToEquip);
-	void TempUnequipWeapon();
+	void Reload();
+	UFUNCTION(BlueprintCallable)
+	void FinishReloading();
 protected:
 	virtual void BeginPlay() override;
 
@@ -51,6 +54,12 @@ protected:
 
 	void SetHUDCrosshairs(float DeltaTime);
 
+	UFUNCTION(Server, Reliable)
+	void ServerReload();
+
+	void HandleReload();
+
+	int32 AmountToReload();
 private:
 
 	UPROPERTY()
@@ -129,10 +138,25 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_CarriedAmmo)
 	int32 CarriedAmmo;
 
+
 	UFUNCTION()
 	void OnRep_CarriedAmmo();
 
 	TMap<EWeaponType, int32> CarriedAmmoMap;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingARAmmo = 30;
+
+	void InitializeCarriedAmmo();
+
+	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
+	ECombatState CombatState = ECombatState::ECS_Unoccupied;
+
+	UFUNCTION()
+	void OnRep_CombatState();
+
+	void UpdateAmmoValues();
+
 public:	
 
 		
