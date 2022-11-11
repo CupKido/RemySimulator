@@ -213,6 +213,15 @@ void UCombatComponent::UpdateAmmoValues() {
 	EquippedWeapon->AddAmmo(-ReloadAmount);
 }
 
+void UCombatComponent::ShowWeapon(bool ToShow)
+{
+	if (EquippedWeapon) {
+		EquippedWeapon->GetWeaponMesh()->SetVisibility(ToShow);
+		EquippedWeapon->ShowPickupWidget(false);
+	}
+	
+}
+
 void UCombatComponent::HandleReload()
 {
 	Character->PlayReloadMontage();

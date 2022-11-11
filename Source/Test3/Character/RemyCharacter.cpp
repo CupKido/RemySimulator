@@ -118,6 +118,10 @@ void ARemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ARemyCharacter::FireButtonPressed);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ARemyCharacter::FireButtonReleased);
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ARemyCharacter::ReloadButtonPressed);
+	PlayerInputComponent->BindAction("Emote1", IE_Pressed, this, &ARemyCharacter::PlaySaluteMontage);
+	PlayerInputComponent->BindAction("Emote2", IE_Pressed, this, &ARemyCharacter::PlaySadMontage);
+	PlayerInputComponent->BindAction("Emote3", IE_Pressed, this, &ARemyCharacter::PlayDanceMontage);
+	PlayerInputComponent->BindAction("Emote4", IE_Pressed, this, &ARemyCharacter::PlayWaveMontage);
 
 	
 	PlayerInputComponent->BindAction("ZoomInCamera", IE_Pressed, this, &ARemyCharacter::ZoomInCamera);
@@ -170,6 +174,62 @@ void ARemyCharacter::PlayElimMontage()
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && ElimMontage) {
 		AnimInstance->Montage_Play(ElimMontage);
+	}
+}
+
+void ARemyCharacter::ServerPlayMontage_Implementation(FName EmoteName)
+{
+	PlayEmote(EmoteName);
+}
+
+
+void ARemyCharacter::PlaySaluteMontage()
+{
+	FName SectionName = FName("Salute");
+	ServerPlayMontage(SectionName);
+	PlayEmote(SectionName);
+}
+
+void ARemyCharacter::PlayEmote(FName SectionName)
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (Combat) {
+		Combat->ShowWeapon(false);
+	}
+	if (AnimInstance && EmotesMontage) {
+		AnimInstance->Montage_Play(EmotesMontage);
+
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+	bInEmote = true;
+}
+
+void ARemyCharacter::PlaySadMontage()
+{
+	FName SectionName = FName("Sad");
+	ServerPlayMontage(SectionName);
+	PlayEmote(SectionName);
+}
+
+void ARemyCharacter::PlayDanceMontage()
+{
+	FName SectionName = FName("Dance");
+	ServerPlayMontage(SectionName);
+	PlayEmote(SectionName);
+}
+
+void ARemyCharacter::PlayWaveMontage()
+{
+	FName SectionName = FName("Wave");
+	ServerPlayMontage(SectionName);
+	PlayEmote(SectionName);
+}
+
+void ARemyCharacter::FinishEmotes()
+{
+	bInEmote = false;
+	if (Combat) {
+		Combat->ShowWeapon(true);
 	}
 }
 

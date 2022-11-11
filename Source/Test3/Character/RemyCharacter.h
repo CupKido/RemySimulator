@@ -33,6 +33,17 @@ public:
 	void PlayReloadMontage();
 	void PlayElimMontage();
 
+	UFUNCTION(Server, Reliable)
+	void ServerPlayMontage(FName EmoteName);
+
+	void PlaySaluteMontage();
+	void PlayEmote(FName SectionName);
+	void PlaySadMontage();
+	void PlayDanceMontage();
+	void PlayWaveMontage();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishEmotes();
 
 	void Elim();
 
@@ -124,9 +135,11 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* ElimMontage;
 
+	UPROPERTY(EditAnywhere, Category = "Emotes")
+	UAnimMontage* EmotesMontage;
 
 	
-
+	bool bInEmote = false;
 
 	void HideCameraIfCharacterClose();
 
@@ -244,7 +257,9 @@ public:
 	FVector GetHitTarget() const;
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE bool IsElimmed() const { return bElimmed; }
+	FORCEINLINE bool IsInEmote() const { return bInEmote; }
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 	ECombatState GetCombatState() const;
+
 };

@@ -56,7 +56,7 @@ void URemyAnimInstance::NativeUpdateAnimation(float DeltaTime)
 
 	AO_Pitch = RemyC->GetAO_Pitch();
 	
-	bUseFabrik = RemyC->GetCombatState() != ECombatState::ECS_Reloading;
+	bUseFabrik = RemyC->GetCombatState() != ECombatState::ECS_Reloading && !RemyC->IsInEmote();
 
 	if (bWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeaponMesh() && RemyC->GetMesh())
 	{

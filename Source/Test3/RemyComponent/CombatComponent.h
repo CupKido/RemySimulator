@@ -157,7 +157,8 @@ private:
 
 	void UpdateAmmoValues();
 
-public:	
 
+public:	
+	void ShowWeapon(bool ToShow);
 		
 };
