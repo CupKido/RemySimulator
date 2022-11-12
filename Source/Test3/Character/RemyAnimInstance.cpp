@@ -57,6 +57,8 @@ void URemyAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	AO_Pitch = RemyC->GetAO_Pitch();
 	
 	bUseFabrik = RemyC->GetCombatState() != ECombatState::ECS_Reloading;
+	bUseAimOffsets = RemyC->GetCombatState() != ECombatState::ECS_Reloading;
+	bTransformRightHand = RemyC->GetCombatState() != ECombatState::ECS_Reloading;
 
 	if (bWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeaponMesh() && RemyC->GetMesh())
 	{
@@ -74,7 +76,7 @@ void URemyAnimInstance::NativeUpdateAnimation(float DeltaTime)
 			FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(RightHandLocation, RemyC->GetHitTarget());
 			LookAtRotation.Add(90, 0 , 0);
 			LookAtRotation.Add(0, 0, -90);
-			RightHandRotation = FMath::RInterpTo(RightHandRotation, LookAtRotation, DeltaTime, 55.f);
+			RightHandRotation = FMath::RInterpTo(RightHandRotation, LookAtRotation, DeltaTime, 100.f);
 		}
 		else {
 

@@ -73,6 +73,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = Combat)
 		bool bAutomatic = true;
 
+	UPROPERTY(EditAnywhere)
+	class USoundCue* EquipSound;
 
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
 	int32 Ammo;

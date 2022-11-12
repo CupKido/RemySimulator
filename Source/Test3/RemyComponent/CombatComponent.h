@@ -157,6 +157,11 @@ private:
 
 	void UpdateAmmoValues();
 
+	UPROPERTY(EditAnywhere, Category = "Auto Reload")
+	bool bReloadOnPickup = false;
+
+	UPROPERTY(EditAnywhere, Category = "Auto Reload")
+	bool bReloadIfEmpty = true;
 public:	
 
 		

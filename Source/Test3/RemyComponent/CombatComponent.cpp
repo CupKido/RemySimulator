@@ -13,7 +13,7 @@
 #include "Test3/PlayerController/RemyPlayerController.h"
 #include "Camera/CameraComponent.h"
 #include "TimerManager.h"
-
+#include "Sound/SoundCue.h"
 
 
 #include "Internationalization/Text.h"
@@ -114,6 +114,9 @@ void UCombatComponent::FireTimerFinished()
 	if (bFireButtonPressed && EquippedWeapon->bAutomatic) {
 		Fire();
 	}
+	if (EquippedWeapon->IsEmpty() && bReloadIfEmpty) {
+		Reload();
+	}
 }
 
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
@@ -166,8 +169,17 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	if (Controller) {
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
 	}
+
+	if (EquippedWeapon->EquipSound) {
+		UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound, Character->GetActorLocation());
+	}
+
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
+
+	if (EquippedWeapon->IsEmpty() && bReloadOnPickup) {
+		Reload();
+	}
 }
 
 void UCombatComponent::Reload()
@@ -254,6 +266,11 @@ void UCombatComponent::OnRep_EquippedWeapon() {
 		if (HandSocket) {
 			HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
 		}
+
+		if (EquippedWeapon->EquipSound) {
+			UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound, Character->GetActorLocation());
+		}
+
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
 	}
