@@ -8,6 +8,8 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Actor.h"
 #include "Engine/StaticMesh.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 #include "PlanePilot.generated.h"
 
 UCLASS()
@@ -84,7 +86,6 @@ public:
 	const float maxElevatorPitch = 25.0;
 	const float maxRudderYaw = 45.0;
 	const float maxAileronPitch = 45.0;
-
 	//constants end
 
 	float thrustSpeed = 0.0;
@@ -107,4 +108,7 @@ private:
 	void Turn(float Value);
 	void Pitch(float Value);
 	void Roll(float Value);
+
+	UPROPERTY(EditAnywhere, Category = "ThrusterParticles")
+		UNiagaraSystem* ThrusterSystem;
 };

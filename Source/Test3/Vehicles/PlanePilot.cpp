@@ -3,6 +3,7 @@
 
 #include "PlanePilot.h"
 
+
 // Sets default values
 APlanePilot::APlanePilot()
 {
@@ -108,7 +109,12 @@ void APlanePilot::BeginPlay()
 	thrustSpeed = minThrustSpeed;
 	currentSpeed = minThrustSpeed;
 
-
+	if (ThrusterSystem) {
+		//     This spawns the chosen effect on the owning WeaponMuzzle SceneComponent
+		//UNiagaraComponent* NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAttached(ThrusterSystem, /*USceneComponent*/0, NAME_None, FVector(0.f), FRotator(0.f), EAttachLocation::Type::KeepRelativeOffset, true);
+		//     Parameters can be set like this (see documentation for further info) - the names and type must match the user exposed parameter in the Niagara System
+		//NiagaraComp->SetNiagaraVariableFloat(FString("StrengthCoef"), /*float*/0.0);
+	}
 }
 
 // Called every frame
@@ -173,7 +179,7 @@ void APlanePilot::UpdatePitch(float Value, float DeltaSeconds)
 	FlapsR->SetRelativeRotation(FRotator(FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxFlapPitch, -maxFlapPitch), currentPitch), 0, 0));
 
 	ElevatorR->SetRelativeRotation(FRotator(FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxElevatorPitch, -maxElevatorPitch), currentPitch), 0, 0));
-	ElevatorR->SetRelativeRotation(FRotator(FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxElevatorPitch, -maxElevatorPitch), currentPitch), 0, 0));
+	ElevatorL->SetRelativeRotation(FRotator(FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxElevatorPitch, -maxElevatorPitch), currentPitch), 0, 0));
 }
 
 void APlanePilot::UpdateRoll(float Value, float DeltaSeconds)
