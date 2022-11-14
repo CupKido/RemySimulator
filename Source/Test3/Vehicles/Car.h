@@ -32,9 +32,9 @@ public:
 
 protected:
 	float MaxSpeed = 3000.0;
-	float CurrentSpeed;
+	float CurrentSpeed = 0;
 	float MaxSteeringAngle = 45.0;
-	float CurrentSteeringAngle;
+	float CurrentSteeringAngle = 0;
 	float SpeedToRotate = 0.001;
 
 	UPROPERTY(VisibleAnywhere, Category = "Car Body")
@@ -49,6 +49,17 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Car TP")
 		class UCameraComponent* CameraTP;
 
-	UPROPERTY(VisibleAnywhere, Category = "Car FP")
-		class UCameraComponent* CameraFP;
+	UFUNCTION()
+		void Throttle(float Value);
+	
+	UFUNCTION()
+	void Steer(float Value);
+
+	UFUNCTION()
+	void LookRight(float Value);
+
+	UFUNCTION()
+	void LookUp(float Value);
+
+
 };

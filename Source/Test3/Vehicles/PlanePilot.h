@@ -99,8 +99,12 @@ public:
 
 private:
 	void UpdatePosition(float DeltaSeconds);
-	void UpdateYaw(float DeltaSeconds);
-	void UpdatePitch(float DeltaSeconds);
-	void UpdateRoll(float DeltaSeconds);
+	void UpdateYaw(float Value, float DeltaSeconds);
+	void UpdatePitch(float Value, float DeltaSeconds);
+	void UpdateRoll(float Value, float DeltaSeconds);
 	void PrintVariables();
+	void Thrust(float Value);
+	void Turn(float Value);
+	void Pitch(float Value);
+	void Roll(float Value);
 };

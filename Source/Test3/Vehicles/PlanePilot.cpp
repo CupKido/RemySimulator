@@ -10,22 +10,25 @@ APlanePilot::APlanePilot()
 	PrimaryActorTick.bCanEverTick = true;
 
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComp"));
-	SpringArmComp->TargetArmLength = 800.f;
+	SpringArmComp->TargetArmLength = 1000.f;
 
 	Fuselage = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Fuselage"));
 	
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshContainer(TEXT("StaticMesh'/Game/Vehicles/Plane/Assets/SM_fuselage.SM_fuselage'"));
 	if (MeshContainer.Succeeded())
-	{
 		Fuselage->SetStaticMesh(MeshContainer.Object);
-	}
 
 	SetRootComponent(Fuselage);
 
 	SpringArmComp->SetupAttachment(Fuselage);
 
+
+	
+
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
+	SpringArmComp->SocketOffset = FVector(0, 0, 300);
+	
 
 	Glass = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Glass"));
 	AileronL = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("AileronL"));
@@ -59,6 +62,41 @@ APlanePilot::APlanePilot()
 	FlapsL->SetupAttachment(Fuselage, TEXT("FlapsL"));
 	FlapsR->SetupAttachment(Fuselage, TEXT("FlapsR"));
 
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> GlassMesh(TEXT("StaticMesh'/Game/Vehicles/Plane/Assets/SM_glass.SM_glass'"));
+	if (GlassMesh.Succeeded())
+		Glass->SetStaticMesh(GlassMesh.Object);
+
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> AileronLMesh(TEXT("StaticMesh'/Game/Vehicles/Plane/Assets/SM_aileronL.SM_aileronL'"));
+	if (AileronLMesh.Succeeded())
+		AileronL->SetStaticMesh(AileronLMesh.Object);
+
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> AileronRMesh(TEXT("StaticMesh'/Game/Vehicles/Plane/Assets/SM_aileronR.SM_aileronR'"));
+	if (AileronRMesh.Succeeded())
+		AileronR->SetStaticMesh(AileronRMesh.Object);
+
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> RudderLMesh(TEXT("StaticMesh'/Game/Vehicles/Plane/Assets/SM_rudderL.SM_rudderL'"));
+	if (RudderLMesh.Succeeded())
+		RudderL->SetStaticMesh(RudderLMesh.Object);
+
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> RudderRMesh(TEXT("StaticMesh'/Game/Vehicles/Plane/Assets/SM_rudderR.SM_rudderR'"));
+	if (RudderRMesh.Succeeded())
+		RudderR->SetStaticMesh(RudderRMesh.Object);
+
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> ElevatorLMesh(TEXT("StaticMesh'/Game/Vehicles/Plane/Assets/SM_aileronL.SM_aileronL'"));
+	if (ElevatorLMesh.Succeeded())
+		ElevatorL->SetStaticMesh(ElevatorLMesh.Object);
+	
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> ElevatorRMesh(TEXT("StaticMesh'/Game/Vehicles/Plane/Assets/SM_aileronR.SM_aileronR'"));
+	if (ElevatorRMesh.Succeeded())
+		ElevatorR->SetStaticMesh(ElevatorRMesh.Object);
+
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> FlapsLMesh(TEXT("StaticMesh'/Game/Vehicles/Plane/Assets/SM_flapsL.SM_flapsL'"));
+	if (FlapsLMesh.Succeeded())
+		FlapsL->SetStaticMesh(FlapsLMesh.Object);
+
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> FlapsRMesh(TEXT("StaticMesh'/Game/Vehicles/Plane/Assets/SM_flapsR.SM_flapsR'"));
+	if (FlapsRMesh.Succeeded())
+		FlapsR->SetStaticMesh(FlapsRMesh.Object);
 	
 }
 
@@ -66,13 +104,18 @@ APlanePilot::APlanePilot()
 void APlanePilot::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	thrustSpeed = minThrustSpeed;
+	currentSpeed = minThrustSpeed;
+
+
 }
 
 // Called every frame
 void APlanePilot::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	UpdatePosition(DeltaTime);
 	PrintVariables();
 }
 
@@ -81,6 +124,68 @@ void APlanePilot::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	PlayerInputComponent->BindAxis("Thrust", this, &APlanePilot::Thrust);
+	PlayerInputComponent->BindAxis("Yaw", this, &APlanePilot::Turn);
+	PlayerInputComponent->BindAxis("Pitch", this, &APlanePilot::Pitch);
+	PlayerInputComponent->BindAxis("Roll", this, &APlanePilot::Roll);
+}
+
+void APlanePilot::UpdatePosition(float DeltaSeconds)
+{
+	//calculae current spped (possible in one line but it was too cluttered)
+	if (thrustSpeed < currentSpeed)
+		currentSpeed = FMath::FInterpTo(currentSpeed, thrustSpeed, DeltaSeconds, drag);
+	else
+		currentSpeed = thrustSpeed;
+
+	// calculate new position
+	FVector newPosition = currentSpeed* DeltaSeconds* GetActorForwardVector();
+
+	// calculate applied gravity
+	appliedGravity = FMath::GetMappedRangeValueClamped(FVector2D(0.0, minThrustSpeed), FVector2D(gravity, 0.0), currentSpeed);
+
+	//update position
+	newPosition.Z = newPosition.Z - appliedGravity * DeltaSeconds;
+	this->AddActorWorldOffset(newPosition, true);
+}
+
+void APlanePilot::UpdateYaw(float Value, float DeltaSeconds)
+{
+	targetYaw = Value;
+	currentYaw = FMath::FInterpTo(currentYaw, targetYaw, DeltaSeconds, 10.0);
+
+	this->AddActorLocalRotation(FRotator(0, currentYaw * DeltaSeconds * 20.0, 0), true);
+
+
+	RudderL->SetRelativeRotation(FRotator(0, FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxRudderYaw, -maxRudderYaw), currentYaw), 0));
+	RudderR->SetRelativeRotation(FRotator(0, FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxRudderYaw, -maxRudderYaw), currentYaw), 0));
+}
+
+void APlanePilot::UpdatePitch(float Value, float DeltaSeconds)
+{
+	targetPitch = Value;
+	currentPitch = FMath::FInterpTo(currentPitch, targetPitch, DeltaSeconds, 10.0);
+
+	this->AddActorLocalRotation(FRotator(currentPitch * DeltaSeconds * 20.0, 0 ,0), true);
+
+
+	FlapsL->SetRelativeRotation(FRotator(FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxFlapPitch, -maxFlapPitch), currentPitch), 0, 0));
+	FlapsR->SetRelativeRotation(FRotator(FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxFlapPitch, -maxFlapPitch), currentPitch), 0, 0));
+
+	ElevatorR->SetRelativeRotation(FRotator(FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxElevatorPitch, -maxElevatorPitch), currentPitch), 0, 0));
+	ElevatorR->SetRelativeRotation(FRotator(FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxElevatorPitch, -maxElevatorPitch), currentPitch), 0, 0));
+}
+
+void APlanePilot::UpdateRoll(float Value, float DeltaSeconds)
+{
+	targetRoll= Value;
+	currentRoll = FMath::FInterpTo(currentRoll, targetRoll, DeltaSeconds, 10.0);
+
+	this->AddActorLocalRotation(FRotator(0, 0, currentRoll * DeltaSeconds * 20.0), true);
+
+
+	AileronL->SetRelativeRotation(FRotator(-1.0 * FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxAileronPitch, -maxAileronPitch), currentRoll),0 ,0));
+	AileronR->SetRelativeRotation(FRotator(FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxAileronPitch, -maxAileronPitch), currentRoll), 0, 0));
 }
 
 void APlanePilot::PrintVariables()
@@ -88,6 +193,26 @@ void APlanePilot::PrintVariables()
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("thrust Speed: %f"), thrustSpeed));
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("current Speed: %f"), currentSpeed));
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("applied Gravity: %f"), appliedGravity));
+}
+
+void APlanePilot::Thrust(float Value)
+{
+	thrustSpeed = FMath::Clamp(Value* thrustMultiplier* FApp::GetDeltaTime() + thrustSpeed, 0, maxThrustSpeed);
+}
+
+void APlanePilot::Turn(float Value)
+{
+	UpdateYaw(Value, FApp::GetDeltaTime());
+}
+
+void APlanePilot::Pitch(float Value)
+{
+	UpdatePitch(Value, FApp::GetDeltaTime());
+}
+
+void APlanePilot::Roll(float Value)
+{
+	UpdateRoll(Value, FApp::GetDeltaTime());
 }
 
 
