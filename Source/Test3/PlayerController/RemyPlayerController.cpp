@@ -16,6 +16,7 @@ void ARemyPlayerController::BeginPlay()
 
 }
 
+
 void ARemyPlayerController::OnPossess(APawn* InPawn) {
 	Super::OnPossess(InPawn);
 
@@ -23,6 +24,13 @@ void ARemyPlayerController::OnPossess(APawn* InPawn) {
 	if (RemyC) {
 		SetHUDHealth(RemyC->GetHealth(), RemyC->GetMaxHealth());
 	}
+}
+
+void ARemyPlayerController::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	SetHUDTime();
 }
 
 void ARemyPlayerController::SetHUDHealth(float Health, float MaxHealth) {
@@ -82,4 +90,27 @@ void ARemyPlayerController::SetHUDCarriedAmmo(int32 Ammo)
 		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
 		RemyHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString(AmmoText));
 	}
+}
+
+void ARemyPlayerController::SetHUDMatchCountdown(float CountdownTime)
+{
+	RemyHUD = RemyHUD == nullptr ? Cast<ARemyHUD>(GetHUD()) : RemyHUD;
+	bool bHUDValid = RemyHUD && RemyHUD->CharacterOverlay && RemyHUD->CharacterOverlay->MatchCountdownText;
+	if (bHUDValid) {
+		int32 Minutes = FMath::FloorToInt(CountdownTime / 60);
+		int32 Seconds = FMath::FloorToInt(CountdownTime) % 60;
+		
+
+		FString CountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
+		RemyHUD->CharacterOverlay->MatchCountdownText->SetText(FText::FromString(CountdownText));
+	}
+}
+
+void ARemyPlayerController::SetHUDTime()
+{
+	uint32 SecondsLeft = FMath::CeilToInt(MatchTime - GetWorld()->GetTimeSeconds());
+	if (CountdownInt != SecondsLeft) {
+		SetHUDMatchCountdown(MatchTime - GetWorld()->GetTimeSeconds());
+	}
+	CountdownInt = SecondsLeft;
 }

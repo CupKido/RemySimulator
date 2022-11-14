@@ -19,11 +19,16 @@ public:
 	void SetHUDDefeats(int32 Defeats);
 	void SetHUDWeaponAmmo(int32 Ammo, int32 Capacity = 1);
 	void SetHUDCarriedAmmo(int32 Ammo);
+	void SetHUDMatchCountdown(float CountdownTime);
 	virtual void OnPossess(APawn* InPawn) override;
+	virtual void Tick(float DeltaTime) override;
 protected:
 	virtual void BeginPlay() override;
-
+	void SetHUDTime();
 private:
 	UPROPERTY()
 	class ARemyHUD* RemyHUD;
+
+	float MatchTime = 120.f;
+	uint32 CountdownInt =0;
 };
