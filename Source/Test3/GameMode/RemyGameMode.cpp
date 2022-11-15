@@ -7,6 +7,42 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerStart.h"
 #include "Test3/PlayerState/RemyPlayerState.h"
+#include "Test3/PlayerController/RemyPlayerController.h"
+
+ARemyGameMode::ARemyGameMode() {
+	bDelayedStart = true;
+}
+
+void ARemyGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+	LevelStartingTime = GetWorld()->GetTimeSeconds();
+}
+
+void ARemyGameMode::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (MatchState == MatchState::WaitingToStart) {
+		CountDownTime = WarmupTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		if (CountDownTime <= 0.f) {
+			StartMatch();
+		}
+	}
+}
+
+void ARemyGameMode::OnMatchStateSet()
+{
+	Super::OnMatchStateSet();
+
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It) 
+	{
+		ARemyPlayerController* RemyPlayer = Cast<ARemyPlayerController>(*It);
+		if (RemyPlayer) {
+			RemyPlayer->OnMatchStateSet(MatchState);
+		}
+	}
+}
 
 void ARemyGameMode::PlayerEliminated(class ARemyCharacter* ElimmedCharacter, class ARemyPlayerController* VictimController, ARemyPlayerController* AttackerController) {
 

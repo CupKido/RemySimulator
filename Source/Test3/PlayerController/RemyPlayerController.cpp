@@ -7,14 +7,28 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Test3/Character/RemyCharacter.h"
+#include "Net/UnrealNetwork.h"
+#include "Test3/GameMode/RemyGameMode.h"
+#include "Test3/HUD/Announcement.h"
+
 
 void ARemyPlayerController::BeginPlay() 
 {
 	Super::BeginPlay();
 	RemyHUD = Cast<ARemyHUD>(GetHUD());
-
+	if (RemyHUD)
+	{
+		RemyHUD->AddAnnouncement();
+	}
 
 }
+void ARemyPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ARemyPlayerController, MatchState);
+}
+
 
 
 void ARemyPlayerController::OnPossess(APawn* InPawn) {
@@ -31,7 +45,18 @@ void ARemyPlayerController::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	SetHUDTime();
+	CheckTimeSync(DeltaTime);
+	PollInit();
 }
+
+void ARemyPlayerController::CheckTimeSync(float DeltaTime)
+{
+	TimeSyncRunningTime += DeltaTime;
+	if (IsLocalController() && TimeSyncFrequency <= TimeSyncRunningTime) {
+		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
+	}
+}
+
 
 void ARemyPlayerController::SetHUDHealth(float Health, float MaxHealth) {
 	RemyHUD = RemyHUD == nullptr ? Cast<ARemyHUD>(GetHUD()) : RemyHUD;
@@ -41,6 +66,12 @@ void ARemyPlayerController::SetHUDHealth(float Health, float MaxHealth) {
 		RemyHUD->CharacterOverlay->HealthBar->SetPercent(HealthPercent);
 		RemyHUD->CharacterOverlay->HealthText->SetText(FText::FromString(FString::Printf(TEXT("%d"), FMath::CeilToInt(Health))));
 	}
+	else
+	{
+		bInitializeCharacterOverlay = true;
+		HUDHealth = Health;
+		HUDMaxHealth = MaxHealth;
+	}
 }
 
 void ARemyPlayerController::SetHUDScore(float Score) {
@@ -49,6 +80,10 @@ void ARemyPlayerController::SetHUDScore(float Score) {
 	if (bHUDValid) {
 		FString ScoreText = FString::Printf(TEXT("%d"), FMath::FloorToInt(Score));
 		RemyHUD->CharacterOverlay->ScoreAmount->SetText(FText::FromString(ScoreText));
+	}
+	else {
+		bInitializeCharacterOverlay = true;
+		HUDScore = Score;
 	}
 }
 
@@ -60,6 +95,10 @@ void ARemyPlayerController::SetHUDDefeats(int32 Defeats) {
 	if (bHUDValid) {
 		FString DefeatsText = FString::Printf(TEXT("%d"), Defeats);
 		RemyHUD->CharacterOverlay->DefeatsAmount->SetText(FText::FromString(DefeatsText));
+	}
+	else {
+		bInitializeCharacterOverlay = true;
+		HUDDefeats = Defeats;
 	}
 }
 
@@ -108,9 +147,84 @@ void ARemyPlayerController::SetHUDMatchCountdown(float CountdownTime)
 
 void ARemyPlayerController::SetHUDTime()
 {
-	uint32 SecondsLeft = FMath::CeilToInt(MatchTime - GetWorld()->GetTimeSeconds());
+	uint32 SecondsLeft = FMath::CeilToInt(MatchTime - GetServerTime());
 	if (CountdownInt != SecondsLeft) {
-		SetHUDMatchCountdown(MatchTime - GetWorld()->GetTimeSeconds());
+		SetHUDMatchCountdown(MatchTime - GetServerTime());
 	}
 	CountdownInt = SecondsLeft;
+}
+
+void ARemyPlayerController::PollInit()
+{
+	if (CharacterOverlay == nullptr) {
+		if (RemyHUD && RemyHUD->CharacterOverlay)
+		{
+			CharacterOverlay = RemyHUD->CharacterOverlay;
+			if (CharacterOverlay) {
+				SetHUDHealth(HUDHealth, HUDMaxHealth);
+				SetHUDScore(HUDScore);
+				SetHUDDefeats(HUDDefeats);
+			}
+		}
+	}
+}
+
+
+
+void ARemyPlayerController::ServerRequestServerTime_Implementation(float TimeOfclientRequest)
+{
+	float ServerTimeOfReceipt = GetWorld()->GetTimeSeconds();
+	ClientReportServerTime(TimeOfclientRequest, ServerTimeOfReceipt);
+}
+
+void ARemyPlayerController::ClientReportServerTime_Implementation(float TimeOfclientRequest, float TimeServerReceivedClientRequest)
+{
+	float RoundTrip = GetWorld()->GetTimeSeconds() - TimeOfclientRequest;
+	float CurrentServerTime = TimeServerReceivedClientRequest + (RoundTrip * 0.5f);
+	ClientServerDelta = CurrentServerTime - GetWorld()->GetTimeSeconds();
+}
+
+float ARemyPlayerController::GetServerTime()
+{
+	if (HasAuthority()) return GetWorld()->GetTimeSeconds();
+	else return GetWorld()->GetTimeSeconds() + ClientServerDelta;
+}
+
+void ARemyPlayerController::ReceivedPlayer()
+{
+	Super::ReceivedPlayer();
+
+	if (IsLocalController()) {
+		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
+	}
+}
+
+void ARemyPlayerController::OnMatchStateSet(FName State)
+{
+	MatchState = State;
+	
+	if (MatchState == MatchState::InProgress)
+	{
+		HandleMatchHasStarted();
+	}
+}
+
+
+void ARemyPlayerController::OnRep_MatchState()
+{
+	if (MatchState == MatchState::InProgress)
+	{
+		HandleMatchHasStarted();
+	}
+}
+
+void ARemyPlayerController::HandleMatchHasStarted()
+{
+	RemyHUD = RemyHUD == nullptr ? Cast<ARemyHUD>(GetHUD()) : RemyHUD;
+	if (RemyHUD) {
+		RemyHUD->AddCharacterOverlay();
+		if (RemyHUD->Announcement) {
+			RemyHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
 }

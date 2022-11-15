@@ -4,12 +4,11 @@
 #include "RemyHUD.h"
 #include "GameFramework/PlayerController.h"
 #include "Test3/HUD/CharacterOverlay.h"
+#include "Announcement.h"
 
 void ARemyHUD::BeginPlay()
 {
 	Super::BeginPlay();
-
-	AddCharacterOverlay();
 }
 
 void ARemyHUD::AddCharacterOverlay() 
@@ -21,6 +20,17 @@ void ARemyHUD::AddCharacterOverlay()
 		CharacterOverlay->AddToViewport();
 	}
 }
+
+void ARemyHUD::AddAnnouncement()
+{
+	APlayerController* PlayerController = GetOwningPlayerController();
+	if (PlayerController && AnnouncementClass) {
+		Announcement = CreateWidget<UAnnouncement>(PlayerController, AnnouncementClass);
+
+		Announcement->AddToViewport();
+	}
+}
+
 
 void ARemyHUD::DrawHUD() 
 {
