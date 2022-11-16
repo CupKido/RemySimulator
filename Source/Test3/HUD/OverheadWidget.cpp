@@ -40,7 +40,16 @@ void UOverheadWidget::ShowPlayerNetRole(APawn* InPawn) {
 }
 
 void UOverheadWidget::ShowPlayerName(APlayerState* Player) {
-	FString DisplayName = Player->GetPlayerName();
-	SetDisplayText(DisplayName);
-	/*	SetDisplayText(FString("Hello there"));*/
+	try {
+		if (Player) {
+			FString DisplayName = Player->GetPlayerName();
+				SetDisplayText(DisplayName);
+		}
+	}
+	catch(...) {
+
+	}
+	
+	
+	
 }

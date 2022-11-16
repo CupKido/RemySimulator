@@ -22,6 +22,8 @@
 #include "Test3/Weapon/WeaponTypes.h"
 
 
+
+#include "Test3/HUD/OverheadWidget.h"
 #include "Internationalization/Text.h"
 // Sets default values
 ARemyCharacter::ARemyCharacter()
@@ -67,7 +69,11 @@ void ARemyCharacter::Destroyed() {
 	if (ElimBotComponent) {
 		ElimBotComponent->DestroyComponent();
 	}
-	if (Combat && Combat->EquippedWeapon && !bElimmed) {
+
+	ARemyGameMode* RemyGameMode = Cast<ARemyGameMode>(UGameplayStatics::GetGameMode(this));
+	bool bMatchNotInProgress = RemyGameMode && RemyGameMode->GetMatchState() != MatchState::InProgress;
+
+	if (Combat && Combat->EquippedWeapon && bMatchNotInProgress) {
 		Combat->EquippedWeapon->Destroy();
 	}
 }
@@ -80,6 +86,13 @@ void ARemyCharacter::BeginPlay()
 	if (HasAuthority()) {
 		OnTakeAnyDamage.AddDynamic(this, &ARemyCharacter::ReceiveDamage);
 	}
+	/*APlayerState* ThisPlayerState = GetPlayerState();
+	if (OverheadWidget && ThisPlayerState) {
+		UOverheadWidget* overeadWidget = Cast<UOverheadWidget>(OverheadWidget);
+		if (overeadWidget) {
+			overeadWidget->ShowPlayerName(ThisPlayerState);
+		}
+	}*/
 }
 
 void ARemyCharacter::UpdateHUDHealth()
@@ -231,7 +244,10 @@ void ARemyCharacter::MulticastElim_Implementation()
 	
 	// Disable character movement
 	bDisableGameplay = true;
-
+	if (Combat)
+	{
+		Combat->FireButtonPressed(false);
+	}
 
 	//Disable Collision
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);

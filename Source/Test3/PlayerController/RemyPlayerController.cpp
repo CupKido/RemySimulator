@@ -12,6 +12,9 @@
 #include "Test3/HUD/Announcement.h"
 #include "Kismet/GameplayStatics.h"
 #include "Test3/RemyComponent/CombatComponent.h"
+#include "Test3/GameState/RemyGameState.h"
+#include "Test3/PlayerState/RemyPlayerState.h"
+
 
 void ARemyPlayerController::BeginPlay() 
 {
@@ -319,7 +322,37 @@ void ARemyPlayerController::HandleCooldown()
 			RemyHUD->Announcement->SetVisibility(ESlateVisibility::Visible);
 			FString AnnouncementText("New match starts in:");
 			RemyHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
-			RemyHUD->Announcement->InfoText->SetText(FText());
+
+			ARemyGameState* RemyGameState = Cast<ARemyGameState>(UGameplayStatics::GetGameState(this));
+			ARemyPlayerState* RemyPlayerState = GetPlayerState<ARemyPlayerState>();
+			if (RemyGameState && RemyPlayerState) {
+				TArray<ARemyPlayerState*> TopPlayers = RemyGameState->TopScoringPlayers;
+				FString InfoTextString;
+				if (TopPlayers.Num() == 0) {
+					InfoTextString = FString("There is no champion.");
+				}
+				else
+				{
+					if (TopPlayers.Num() == 1) {
+						if (TopPlayers[0] == RemyPlayerState) {
+							InfoTextString = FString("You are the champion!");
+						}
+						else {
+							InfoTextString = FString::Printf(TEXT("%s is the champion!"), *TopPlayers[0]->GetPlayerName());
+						}
+					}
+					else if (TopPlayers.Num() > 1) {
+						InfoTextString = FString("The champion are:");
+						for (auto TiedPlayer : TopPlayers) {
+							InfoTextString.Append(FString::Printf(TEXT("%s\n"), *TiedPlayer->GetPlayerName()));
+						}
+					}
+					InfoTextString.Append(FString::Printf(TEXT("\nwith the score of: %d!\n"), TopPlayers[0]->GetScore()));
+				}
+				
+				RemyHUD->Announcement->InfoText->SetText(FText::FromString(InfoTextString));
+			}
+			
 		}
 	}
 	ARemyCharacter* RemyC = Cast<ARemyCharacter>(GetPawn());

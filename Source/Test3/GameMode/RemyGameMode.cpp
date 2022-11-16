@@ -8,6 +8,7 @@
 #include "GameFramework/PlayerStart.h"
 #include "Test3/PlayerState/RemyPlayerState.h"
 #include "Test3/PlayerController/RemyPlayerController.h"
+#include "Test3/GameState/RemyGameState.h"
 
 namespace MatchState
 {
@@ -67,9 +68,13 @@ void ARemyGameMode::PlayerEliminated(class ARemyCharacter* ElimmedCharacter, cla
 
 	ARemyPlayerState* AttackerPlayerState = AttackerController ? Cast<ARemyPlayerState>(AttackerController->PlayerState) : nullptr;
 	ARemyPlayerState* VictimPlayerState = VictimController ? Cast<ARemyPlayerState>(VictimController->PlayerState) : nullptr;
-	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState)
+
+	ARemyGameState* RemyGameState = GetGameState<ARemyGameState>();
+
+	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState && RemyGameState)
 	{
 		AttackerPlayerState->AddToScore(1.f);	
+		RemyGameState->UpdateTopScore(AttackerPlayerState);
 	}
 	if (VictimPlayerState)
 	{
