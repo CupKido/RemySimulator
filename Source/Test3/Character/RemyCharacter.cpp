@@ -67,6 +67,9 @@ void ARemyCharacter::Destroyed() {
 	if (ElimBotComponent) {
 		ElimBotComponent->DestroyComponent();
 	}
+	if (Combat && Combat->EquippedWeapon && !bElimmed) {
+		Combat->EquippedWeapon->Destroy();
+	}
 }
 
 void ARemyCharacter::BeginPlay()
@@ -95,9 +98,19 @@ void ARemyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	AimOffset(DeltaTime);
+	RotateInPlace(DeltaTime);
 	HideCameraIfCharacterClose();
 	PollInit();
+}
+
+void ARemyCharacter::RotateInPlace(float DeltaTime)
+{
+	if (bDisableGameplay)
+	{
+		bUseControllerRotationPitch = false;
+		return;
+	}
+	AimOffset(DeltaTime);
 }
 
 void ARemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -217,11 +230,7 @@ void ARemyCharacter::MulticastElim_Implementation()
 	StartDissolve();
 	
 	// Disable character movement
-	GetCharacterMovement()->DisableMovement();
-	GetCharacterMovement()->StopMovementImmediately();
-	if (RemyPlayerController) {
-		DisableInput(RemyPlayerController);
-	}
+	bDisableGameplay = true;
 
 
 	//Disable Collision
@@ -274,6 +283,7 @@ void ARemyCharacter::PlayHitReactMontage()
 //InputAction
 
 void ARemyCharacter::MoveForward(float Value) {
+	if (bDisableGameplay) return;
 	if (Controller != nullptr && Value != 0) {
 		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
 		const FVector Direction(FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X));
@@ -282,6 +292,7 @@ void ARemyCharacter::MoveForward(float Value) {
 }
 
 void ARemyCharacter::MoveRight(float Value) {
+	if (bDisableGameplay) return;
 	if (Controller != nullptr && Value != 0.f)
 	{
 		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
@@ -300,6 +311,7 @@ void ARemyCharacter::LookUp(float Value) {
 
 void ARemyCharacter::EquipButtonPressed() 
 {
+	if (bDisableGameplay) return;
 	if (Combat)
 	{
 		if (HasAuthority()) 
@@ -323,6 +335,7 @@ void ARemyCharacter::ServerEquipButtonPressed_Implementation()
 
 void ARemyCharacter::CrouchButtonPressed() 
 {
+	if (bDisableGameplay) return;
 	if (bIsCrouched) {
 		UnCrouch();
 	}
@@ -333,12 +346,14 @@ void ARemyCharacter::CrouchButtonPressed()
 
 void ARemyCharacter::ReloadButtonPressed()
 {
+	if (bDisableGameplay) return;
 	if (Combat) {
 		Combat->Reload();
 	}
 }
 
 void ARemyCharacter::AimButtonPressed() {
+	if (bDisableGameplay) return;
 	if (Combat) {
 		Combat->SetAiming(true);
 	}
@@ -367,6 +382,7 @@ void ARemyCharacter::AimOffset(float DeltaTime)
 }
 
 void ARemyCharacter::Jump() {
+	if (bDisableGameplay) return;
 	if (bIsCrouched) {
 		UnCrouch();
 	}
@@ -376,12 +392,14 @@ void ARemyCharacter::Jump() {
 }
 
 void ARemyCharacter::FireButtonPressed() {
+	if (bDisableGameplay) return;
 	if (Combat) {
 		Combat->FireButtonPressed(true);
 	}
 }
 
 void ARemyCharacter::FireButtonReleased() {
+	if (bDisableGameplay) return;
 	if (Combat) {
 		Combat->FireButtonPressed(false);
 	}
@@ -422,6 +440,7 @@ void ARemyCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 	DOREPLIFETIME_CONDITION(ARemyCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME(ARemyCharacter, Health);
+	DOREPLIFETIME(ARemyCharacter, bDisableGameplay);
 }
 
 void ARemyCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon) {

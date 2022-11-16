@@ -9,6 +9,11 @@
 #include "Test3/PlayerState/RemyPlayerState.h"
 #include "Test3/PlayerController/RemyPlayerController.h"
 
+namespace MatchState
+{
+	const FName Cooldown = FName("Cooldown");
+}
+
 ARemyGameMode::ARemyGameMode() {
 	bDelayedStart = true;
 }
@@ -27,6 +32,20 @@ void ARemyGameMode::Tick(float DeltaTime)
 		CountDownTime = WarmupTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
 		if (CountDownTime <= 0.f) {
 			StartMatch();
+		}
+	}
+	else if (MatchState == MatchState::InProgress)
+	{
+		CountDownTime = WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		if (CountDownTime <= 0.f) {
+			SetMatchState(MatchState::Cooldown);
+		}
+	}
+	else if (MatchState == MatchState::Cooldown)
+	{
+		CountDownTime = CooldownTime + WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		if (CountDownTime <= 0.f) {
+			RestartGame();
 		}
 	}
 }

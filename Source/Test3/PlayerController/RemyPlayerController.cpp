@@ -10,17 +10,14 @@
 #include "Net/UnrealNetwork.h"
 #include "Test3/GameMode/RemyGameMode.h"
 #include "Test3/HUD/Announcement.h"
-
+#include "Kismet/GameplayStatics.h"
+#include "Test3/RemyComponent/CombatComponent.h"
 
 void ARemyPlayerController::BeginPlay() 
 {
 	Super::BeginPlay();
 	RemyHUD = Cast<ARemyHUD>(GetHUD());
-	if (RemyHUD)
-	{
-		RemyHUD->AddAnnouncement();
-	}
-
+	ServerCheckMatchState();
 }
 void ARemyPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -57,6 +54,33 @@ void ARemyPlayerController::CheckTimeSync(float DeltaTime)
 	}
 }
 
+void ARemyPlayerController::ServerCheckMatchState_Implementation()
+{
+	ARemyGameMode* GameMode = Cast<ARemyGameMode>(UGameplayStatics::GetGameMode(this));
+	if (GameMode)
+	{
+		WarmupTime = GameMode->WarmupTime;
+		MatchTime = GameMode->MatchTime;
+		CooldownTime = GameMode->CooldownTime;
+		LevelStartingTime = GameMode->LevelStartingTime;
+		MatchState = GameMode->GetMatchState();
+		ClientJoinMidgame(MatchState, WarmupTime, MatchTime, CooldownTime, LevelStartingTime);
+	}
+}
+
+void ARemyPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime)
+{
+	WarmupTime = Warmup;
+	MatchTime = Match;
+	CooldownTime = Cooldown;
+	LevelStartingTime = StartingTime;
+	MatchState = StateOfMatch;
+	OnMatchStateSet(MatchState);
+	if (RemyHUD && MatchState == MatchState::WaitingToStart)
+	{
+		RemyHUD->AddAnnouncement();
+	}
+}
 
 void ARemyPlayerController::SetHUDHealth(float Health, float MaxHealth) {
 	RemyHUD = RemyHUD == nullptr ? Cast<ARemyHUD>(GetHUD()) : RemyHUD;
@@ -136,6 +160,13 @@ void ARemyPlayerController::SetHUDMatchCountdown(float CountdownTime)
 	RemyHUD = RemyHUD == nullptr ? Cast<ARemyHUD>(GetHUD()) : RemyHUD;
 	bool bHUDValid = RemyHUD && RemyHUD->CharacterOverlay && RemyHUD->CharacterOverlay->MatchCountdownText;
 	if (bHUDValid) {
+
+		if (CountdownTime < 0.f)
+		{
+			RemyHUD->CharacterOverlay->MatchCountdownText->SetText(FText());
+			return;
+		}
+
 		int32 Minutes = FMath::FloorToInt(CountdownTime / 60);
 		int32 Seconds = FMath::FloorToInt(CountdownTime) % 60;
 		
@@ -145,11 +176,50 @@ void ARemyPlayerController::SetHUDMatchCountdown(float CountdownTime)
 	}
 }
 
+void ARemyPlayerController::SetHUDAnnouncementCountdown(float CountdownTime)
+{
+
+	RemyHUD = RemyHUD == nullptr ? Cast<ARemyHUD>(GetHUD()) : RemyHUD;
+	bool bHUDValid = RemyHUD && RemyHUD->Announcement && RemyHUD->Announcement->WarmupTime;
+	if (bHUDValid) {
+		if (CountdownTime < 0.f)
+		{
+			RemyHUD->Announcement->WarmupTime->SetText(FText());
+			return;
+		}
+
+		int32 Minutes = FMath::FloorToInt(CountdownTime / 60);
+		int32 Seconds = FMath::FloorToInt(CountdownTime) % 60;
+
+
+		FString CountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
+		RemyHUD->Announcement->WarmupTime->SetText(FText::FromString(CountdownText));
+	}
+}
+
 void ARemyPlayerController::SetHUDTime()
 {
-	uint32 SecondsLeft = FMath::CeilToInt(MatchTime - GetServerTime());
+	float TimeLeft = 0.f;
+	if (MatchState == MatchState::WaitingToStart) TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime;
+	else if (MatchState == MatchState::InProgress) TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
+	else if (MatchState == MatchState::Cooldown)  TimeLeft = WarmupTime + MatchTime + CooldownTime - GetServerTime() + LevelStartingTime;
+	uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
+
+	if (HasAuthority()) {
+		RemyGameMode = RemyGameMode == nullptr ? Cast<ARemyGameMode>(UGameplayStatics::GetGameMode(this)) : RemyGameMode;
+		if (RemyGameMode) {
+			SecondsLeft = FMath::CeilToInt(RemyGameMode->GetCountDownTime() + LevelStartingTime);
+		}
+	}
+
+
 	if (CountdownInt != SecondsLeft) {
-		SetHUDMatchCountdown(MatchTime - GetServerTime());
+		if (MatchState == MatchState::WaitingToStart || MatchState == MatchState::Cooldown) {
+			SetHUDAnnouncementCountdown(TimeLeft);
+		}
+		else if (MatchState == MatchState::InProgress) {
+			SetHUDMatchCountdown(TimeLeft);
+		}
 	}
 	CountdownInt = SecondsLeft;
 }
@@ -207,6 +277,10 @@ void ARemyPlayerController::OnMatchStateSet(FName State)
 	{
 		HandleMatchHasStarted();
 	}
+	else if(MatchState == MatchState::Cooldown)
+	{
+		HandleCooldown();
+	}
 }
 
 
@@ -215,6 +289,10 @@ void ARemyPlayerController::OnRep_MatchState()
 	if (MatchState == MatchState::InProgress)
 	{
 		HandleMatchHasStarted();
+	}
+	else if (MatchState == MatchState::Cooldown)
+	{
+		HandleCooldown();
 	}
 }
 
@@ -226,5 +304,27 @@ void ARemyPlayerController::HandleMatchHasStarted()
 		if (RemyHUD->Announcement) {
 			RemyHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
 		}
+	}
+}
+
+void ARemyPlayerController::HandleCooldown()
+{
+	RemyHUD = RemyHUD == nullptr ? Cast<ARemyHUD>(GetHUD()) : RemyHUD;
+	if (RemyHUD) {
+		RemyHUD->CharacterOverlay->RemoveFromParent();
+		bool bHUDValid = RemyHUD->Announcement && 
+			RemyHUD->Announcement->AnnouncementText && 
+			RemyHUD->Announcement->InfoText;
+		if (bHUDValid) {
+			RemyHUD->Announcement->SetVisibility(ESlateVisibility::Visible);
+			FString AnnouncementText("New match starts in:");
+			RemyHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
+			RemyHUD->Announcement->InfoText->SetText(FText());
+		}
+	}
+	ARemyCharacter* RemyC = Cast<ARemyCharacter>(GetPawn());
+	if (RemyC && RemyC->GetCombat()) {
+		RemyC->bDisableGameplay = true;
+		RemyC->GetCombat()->FireButtonPressed(false);
 	}
 }

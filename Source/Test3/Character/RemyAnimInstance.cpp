@@ -57,8 +57,8 @@ void URemyAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	AO_Pitch = RemyC->GetAO_Pitch();
 	
 	bUseFabrik = RemyC->GetCombatState() != ECombatState::ECS_Reloading;
-	bUseAimOffsets = RemyC->GetCombatState() != ECombatState::ECS_Reloading;
-	bTransformRightHand = RemyC->GetCombatState() != ECombatState::ECS_Reloading;
+	bUseAimOffsets = RemyC->GetCombatState() != ECombatState::ECS_Reloading && !RemyC->GetDisableGameplay();
+	bTransformRightHand = RemyC->GetCombatState() != ECombatState::ECS_Reloading && !RemyC->GetDisableGameplay();
 
 	if (bWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeaponMesh() && RemyC->GetMesh())
 	{
