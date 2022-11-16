@@ -492,7 +492,7 @@ void ARemyCharacter::PollInit() {
 	if (bShowUsernameOverHead && !bUsernameHasSet) {
 		if (OverheadWidget) {
 			UOverheadWidget* overheadWidget = Cast<UOverheadWidget>(OverheadWidget->GetWidget());
-			if (overheadWidget && RemyPlayerState) {
+			if (overheadWidget && GetPlayerState()) {
 				overheadWidget->ShowPlayerName(this);
 				bUsernameHasSet = true;
 			}
