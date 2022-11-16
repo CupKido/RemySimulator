@@ -113,6 +113,10 @@ private:
 	float AO_Yaw;
 	float AO_Pitch;
 
+	UPROPERTY(EditAnywhere)
+	bool bShowUsernameOverHead = true;
+
+	bool bUsernameHasSet = false;
 	/** 
 	* Animation montages
 	*/

@@ -3,6 +3,7 @@
 
 #include "OverheadWidget.h"
 #include "Components/TextBlock.h"
+#include "GameFramework/PlayerState.h"
 
 void UOverheadWidget::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld) {
 	RemoveFromParent();
@@ -39,17 +40,11 @@ void UOverheadWidget::ShowPlayerNetRole(APawn* InPawn) {
 	SetDisplayText(LocalRoleString);
 }
 
-void UOverheadWidget::ShowPlayerName(APlayerState* Player) {
-	try {
-		if (Player) {
-			FString DisplayName = Player->GetPlayerName();
-				SetDisplayText(DisplayName);
-		}
-	}
-	catch(...) {
+void UOverheadWidget::ShowPlayerName(APawn* InPawn) {
+	APlayerState* thisPlayerState = InPawn->GetPlayerState();
 
+	if (thisPlayerState) {
+		FString DisplayName = thisPlayerState->GetPlayerName();
+		SetDisplayText(DisplayName);
 	}
-	
-	
-	
 }
