@@ -244,8 +244,12 @@ void ARemyCharacter::MulticastElim_Implementation()
 	}
 
 	//Disable Collision
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	/*GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);*/
+	GetMesh()->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);/*
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_, ECollisionResponse::ECR_Block);*/
+	GetMesh()->SetEnableGravity(false);
+	GetCapsuleComponent()->SetEnableGravity(false);
 
 	// Spawn Elim Bot
 	if (ElimBotEffect)
@@ -556,6 +560,7 @@ bool ARemyCharacter::IsAiming() {
 
 void ARemyCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
 {
+	if (DamagedActor == DamageCauser) return;
 	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
 	UpdateHUDHealth();
 	PlayHitReactMontage();
