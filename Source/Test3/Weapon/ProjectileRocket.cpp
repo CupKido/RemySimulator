@@ -9,12 +9,17 @@
 #include "Components/BoxComponent.h"
 #include "Components/AudioComponent.h"
 #include "GameFramework/Character.h"
+#include "RocketMovementComponent.h"
 
 AProjectileRocket::AProjectileRocket()
 {
 	RocketMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Rocket Mesh"));
 	RocketMesh->SetupAttachment(RootComponent);
 	RocketMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	RocketMovementComponent = CreateDefaultSubobject<URocketMovementComponent>(TEXT("RocketMovementComponent"));
+	RocketMovementComponent->bRotationFollowsVelocity = true;
+	RocketMovementComponent->SetIsReplicated(true);
 }
 
 void AProjectileRocket::BeginPlay()
@@ -47,7 +52,10 @@ void AProjectileRocket::BeginPlay()
 
 void AProjectileRocket::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	APawn * FiringPawn = GetInstigator();
+	if (OtherActor == GetOwner()) {
+		return;
+	}
+	APawn* FiringPawn = GetInstigator();
 	if (FiringPawn && HasAuthority()) {
 		AController* FiringController = FiringPawn->GetController();
 		if (FiringController) {
@@ -67,28 +75,26 @@ void AProjectileRocket::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 				this, // Damage causer
 				FiringController // Instigator Controller
 			);
-			ACharacter* FiringCharacter = FiringController->GetCharacter();
-			if (FiringCharacter) {
-				TArray<AActor*> Characters;
-				UGameplayStatics::GetAllActorsOfClass(this, ACharacter::StaticClass(), Characters);
-				for (AActor* Character : Characters) {
-					ACharacter* ch = Cast<ACharacter>(Character);
-					if (ch) {
-						FVector VelocityVector = (ch->GetActorLocation() - GetActorLocation());
-						float size = VelocityVector.Size();
 
-						if (size < LaunchRadius) {
-							VelocityVector.Normalize();
-							VelocityVector = (LaunchStrength * 10000 / size) * VelocityVector;
-							ch->LaunchCharacter(VelocityVector, false, false);
-						}
+
+			TArray<AActor*> Characters;
+			UGameplayStatics::GetAllActorsOfClass(this, ACharacter::StaticClass(), Characters);
+			for (AActor* Character : Characters) {
+				ACharacter* ch = Cast<ACharacter>(Character);
+				if (ch) {
+					FVector VelocityVector = (ch->GetActorLocation() - GetActorLocation());
+					float size = VelocityVector.Size();
+
+					if (size < LaunchRadius) {
+						VelocityVector.Normalize();
+						VelocityVector = (LaunchStrength * 10000 / size) * VelocityVector;
+						ch->LaunchCharacter(VelocityVector, false, false);
 					}
 				}
-				
 			}
 		}
-		
-		
+
+
 	}
 
 	GetWorldTimerManager().SetTimer(
