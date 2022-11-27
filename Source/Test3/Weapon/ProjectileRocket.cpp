@@ -8,6 +8,7 @@
 #include "Sound/SoundCue.h"
 #include "Components/BoxComponent.h"
 #include "Components/AudioComponent.h"
+#include "GameFramework/Character.h"
 
 AProjectileRocket::AProjectileRocket()
 {
@@ -66,7 +67,28 @@ void AProjectileRocket::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 				this, // Damage causer
 				FiringController // Instigator Controller
 			);
+			ACharacter* FiringCharacter = FiringController->GetCharacter();
+			if (FiringCharacter) {
+				TArray<AActor*> Characters;
+				UGameplayStatics::GetAllActorsOfClass(this, ACharacter::StaticClass(), Characters);
+				for (AActor* Character : Characters) {
+					ACharacter* ch = Cast<ACharacter>(Character);
+					if (ch) {
+						FVector VelocityVector = (ch->GetActorLocation() - GetActorLocation());
+						float size = VelocityVector.Size();
+
+						if (size < LaunchRadius) {
+							VelocityVector.Normalize();
+							VelocityVector = (LaunchStrength * 10000 / size) * VelocityVector;
+							ch->LaunchCharacter(VelocityVector, false, false);
+						}
+					}
+				}
+				
+			}
 		}
+		
+		
 	}
 
 	GetWorldTimerManager().SetTimer(

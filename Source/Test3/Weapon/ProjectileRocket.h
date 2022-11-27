@@ -16,6 +16,7 @@ class TEST3_API AProjectileRocket : public AProjectile
 	
 public:
 	AProjectileRocket();
+	
 	virtual void Destroyed() override;
 protected:
 	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) override;
@@ -27,6 +28,12 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	float OuterRadius = 500.f;
+
+	UPROPERTY(EditAnywhere)
+	float LaunchRadius = 1000.f;
+
+	UPROPERTY(EditAnywhere)
+	float LaunchStrength = 30.f;
 
 	UPROPERTY(EditAnywhere)
 	class UNiagaraSystem* TrailSystem;
@@ -42,6 +49,7 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	USoundAttenuation* LoopingSoundAttenuation;
+
 
 private:
 	UPROPERTY(VisibleAnywhere)
