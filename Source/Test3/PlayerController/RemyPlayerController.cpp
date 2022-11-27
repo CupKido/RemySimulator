@@ -303,7 +303,9 @@ void ARemyPlayerController::HandleMatchHasStarted()
 {
 	RemyHUD = RemyHUD == nullptr ? Cast<ARemyHUD>(GetHUD()) : RemyHUD;
 	if (RemyHUD) {
-		RemyHUD->AddCharacterOverlay();
+		if (RemyHUD->CharacterOverlay == nullptr) {
+			RemyHUD->AddCharacterOverlay();
+		}
 		if (RemyHUD->Announcement) {
 			RemyHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
 		}

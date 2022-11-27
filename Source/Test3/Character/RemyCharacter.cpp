@@ -238,18 +238,15 @@ void ARemyCharacter::MulticastElim_Implementation()
 
 	// Disable character movement
 	bDisableGameplay = true;
+	GetCharacterMovement()->DisableMovement();
 	if (Combat)
 	{
 		Combat->FireButtonPressed(false);
 	}
 
 	//Disable Collision
-	/*GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);*/
-	GetMesh()->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);/*
-	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_, ECollisionResponse::ECR_Block);*/
-	GetMesh()->SetEnableGravity(false);
-	GetCapsuleComponent()->SetEnableGravity(false);
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// Spawn Elim Bot
 	if (ElimBotEffect)
