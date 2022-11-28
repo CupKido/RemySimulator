@@ -21,6 +21,8 @@ protected:
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	void DestroyTimerFinished();
+
 private:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* CasingMesh;
@@ -31,6 +33,13 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	class USoundCue* ShellSound;
+
+	FTimerHandle DestroyTimer;
+
+	UPROPERTY(EditAnywhere)
+	float DestroyTime = 3.f;
+
+	bool bWasHit = false;
 
 public:	
 

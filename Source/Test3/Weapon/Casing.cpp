@@ -16,6 +16,7 @@ ACasing::ACasing()
 	CasingMesh->SetEnableGravity(true);
 	CasingMesh->SetNotifyRigidBodyCollision(true);
 	ShellEjectionImpulse = 2.f;
+	bWasHit = false;
 }
 
 void ACasing::BeginPlay()
@@ -27,9 +28,23 @@ void ACasing::BeginPlay()
 
 void ACasing::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (ShellSound) {
-		UGameplayStatics::PlaySoundAtLocation(this, ShellSound, GetActorLocation());
+	if (!bWasHit)
+	{
+		if (ShellSound) {
+			UGameplayStatics::PlaySoundAtLocation(this, ShellSound, GetActorLocation());
+			
+		}
+		GetWorldTimerManager().SetTimer(
+			DestroyTimer, this, &ACasing::DestroyTimerFinished, DestroyTime
+		);
+		bWasHit = true;
 	}
+	
+	
+}
+
+void ACasing::DestroyTimerFinished()
+{
 	Destroy();
 }
 
