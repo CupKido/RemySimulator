@@ -196,6 +196,10 @@ void AWeapon::Fire(const FVector& HitTarget) {
 		if (InstigatorCharacter) {
 			FVector VelocityVector = InstigatorCharacter->GetActorLocation() - HitTarget;
 			VelocityVector.Normalize();
+			if (bLaunchForward)
+			{
+				VelocityVector *= -1;
+			}
 			InstigatorCharacter->LaunchCharacter(VelocityVector * JetpackStrength * 10, false, false);
 		}
 	}

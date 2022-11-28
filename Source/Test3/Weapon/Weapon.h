@@ -146,6 +146,9 @@ private:
 	bool bIsJetpack = false;
 
 	UPROPERTY(EditAnywhere)
+	bool bLaunchForward = false;
+
+	UPROPERTY(EditAnywhere)
 	float JetpackStrength = 30;
 
 public:	
