@@ -142,6 +142,11 @@ private:
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType;
 
+	UPROPERTY(EditAnywhere)
+	bool bIsJetpack = false;
+
+	UPROPERTY(EditAnywhere)
+	float JetpackStrength = 30;
 
 public:	
 	

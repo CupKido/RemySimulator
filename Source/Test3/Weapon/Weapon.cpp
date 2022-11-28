@@ -190,6 +190,15 @@ void AWeapon::Fire(const FVector& HitTarget) {
 		}
 	}
 	SpendRound();
+
+	if (bIsJetpack) {
+		ACharacter* InstigatorCharacter = Cast<ACharacter>(GetOwner());
+		if (InstigatorCharacter) {
+			FVector VelocityVector = InstigatorCharacter->GetActorLocation() - HitTarget;
+			VelocityVector.Normalize();
+			InstigatorCharacter->LaunchCharacter(VelocityVector * JetpackStrength * 10, false, false);
+		}
+	}
 }
 
 void AWeapon::Dropped()
