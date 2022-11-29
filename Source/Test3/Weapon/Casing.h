@@ -28,7 +28,7 @@ private:
 	UStaticMeshComponent* CasingMesh;
 
 	UPROPERTY(EditAnywhere)
-	float ShellEjectionImpulse;
+	float ShellEjectionImpulse = 2.f;
 
 
 	UPROPERTY(EditAnywhere)
