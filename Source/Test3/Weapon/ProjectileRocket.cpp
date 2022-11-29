@@ -87,8 +87,23 @@ void AProjectileRocket::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 
 					if (size < LaunchRadius) {
 						VelocityVector.Normalize();
-						VelocityVector = (LaunchStrength * 10000 / size) * VelocityVector;
-						ch->LaunchCharacter(VelocityVector, false, false);
+						FHitResult FireHit;
+						UWorld* World = GetWorld();
+						if (World) {
+							FVector Start = GetActorLocation() + (VelocityVector);
+							FVector End = GetActorLocation() + ((ch->GetActorLocation() - GetActorLocation()) - (VelocityVector));
+							World->LineTraceSingleByChannel(
+								FireHit, Start, End, ECollisionChannel::ECC_Camera);
+
+							if (!FireHit.bBlockingHit || FireHit.ImpactPoint == ch->GetActorLocation())
+							{
+								VelocityVector = (LaunchStrength * 10000 / size) * VelocityVector;
+								ch->LaunchCharacter(VelocityVector, false, false);
+							}
+						}
+						
+						/*VelocityVector = (LaunchStrength * 10000 / size) * VelocityVector;
+						ch->LaunchCharacter(VelocityVector, false, false);*/
 					}
 				}
 			}
