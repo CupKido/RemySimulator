@@ -30,7 +30,10 @@ protected:
 	float OuterRadius = 500.f;
 
 	UPROPERTY(EditAnywhere)
-	float LaunchRadius = 1000.f;
+	float LaunchOuterRadius = 1000.f;
+
+	UPROPERTY(EditAnywhere)
+	float LaunchInnerRadius = 1000.f;
 
 	UPROPERTY(EditAnywhere)
 	float LaunchStrength = 30.f;
