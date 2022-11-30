@@ -84,7 +84,10 @@ void AProjectileRocket::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 				if (ch) {
 					FVector VelocityVector = (ch->GetActorLocation() - GetActorLocation());
 					float size = VelocityVector.Size();
-
+					/*if (GEngine) {
+						FString temp = FString::Printf(TEXT("%f"), size);
+						GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, temp);
+					}*/
 					if (size < LaunchOuterRadius) {
 						VelocityVector.Normalize();
 						FHitResult FireHit;
@@ -103,6 +106,7 @@ void AProjectileRocket::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 								else {
 									VelocityVector = (LaunchStrength * 10000 / size) * VelocityVector;
 								}
+								
 								ch->LaunchCharacter(VelocityVector, false, false);
 							}
 						}
