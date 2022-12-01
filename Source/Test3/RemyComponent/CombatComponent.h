@@ -10,7 +10,7 @@
 #include "CombatComponent.generated.h"
 
 class AWeapon;
-#define TRACE_LENGTH 80000.f;
+
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TEST3_API UCombatComponent : public UActorComponent
@@ -155,6 +155,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	int32 StartingSMGAmmo = 1000;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingShotgunAmmo = 1000;
 
 	void InitializeCarriedAmmo();
 
