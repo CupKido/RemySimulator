@@ -39,11 +39,19 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void OnMatchStateSet() override;
 private:
+	//returns the furthest player start from all players
 	AActor* GetFurthestPlayerStart(TArray<AActor*> PlayerStarts, TArray<AActor*> Characters);
 	float MinDistanceFromCharacters(AActor* PlayerStart, TArray<AActor*> Characters);
+	// Get Closest Player Start After given Distance, if there is non then returns the furthest player start from all players
+	AActor* GetClosestPlayerStartAfterDistance(TArray<AActor*> PlayerStarts, TArray<AActor*> Characters);
 
 	float CountDownTime = 0.f;
 
+	UPROPERTY(EditDefaultsOnly)
+	float MinSpawnDistance = 5000;
+
+	UPROPERTY(EditDefaultsOnly)
+	float MaxSpawnDistance = 10000;
 public:
 	FORCEINLINE float GetCountDownTime() const { return CountDownTime; }
 };

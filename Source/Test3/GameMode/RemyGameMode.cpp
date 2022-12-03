@@ -97,8 +97,23 @@ void ARemyGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController* El
 		UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
 		UGameplayStatics::GetAllActorsOfClass(this, ACharacter::StaticClass(), Characters);
 		int32 Selection = FMath::RandRange(0, PlayerStarts.Num() - 1);
-		RestartPlayerAtPlayerStart(ElimmedController, GetFurthestPlayerStart(PlayerStarts, Characters));
+		RestartPlayerAtPlayerStart(ElimmedController, GetClosestPlayerStartAfterDistance(PlayerStarts, Characters));
 	}
+}
+
+AActor* ARemyGameMode::GetClosestPlayerStartAfterDistance(TArray<AActor*> PlayerStarts, TArray<AActor*> Characters)
+{
+	uint32 Distance;
+	TArray<AActor*> SuitabelPlayerStarts;
+	for (int i = 0; i < PlayerStarts.Num(); i++) {
+		Distance = MinDistanceFromCharacters(PlayerStarts[i], Characters);
+		if (Distance > MinSpawnDistance && Distance < MaxSpawnDistance) {
+			SuitabelPlayerStarts.Add(PlayerStarts[i]);
+		}
+	}
+	if (SuitabelPlayerStarts.Num() == 0) return GetFurthestPlayerStart(PlayerStarts, Characters);
+	int32 Selection = FMath::RandRange(0, SuitabelPlayerStarts.Num() - 1);
+	return SuitabelPlayerStarts[Selection];
 }
 
 AActor* ARemyGameMode::GetFurthestPlayerStart(TArray<AActor*> PlayerStarts, TArray<AActor*> Characters)
@@ -120,11 +135,13 @@ AActor* ARemyGameMode::GetFurthestPlayerStart(TArray<AActor*> PlayerStarts, TArr
 }
 
 float ARemyGameMode::MinDistanceFromCharacters(AActor* PlayerStart, TArray<AActor*> Characters) {
-	int32 Min = 2147483000;
-	int32 Distance;
+	uint32 Min = 2147483000;
+	uint32 Distance;
 	for (int i = 0; i < Characters.Num(); i++ ) {
 		Distance = (PlayerStart->GetActorLocation() - Characters[i]->GetActorLocation()).Size();
 		if (Distance < Min) Min = Distance;
 	}
 	return Min;
 }
+
+
