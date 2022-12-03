@@ -78,6 +78,8 @@ void ARemyCharacter::Destroyed() {
 	}
 }
 
+
+
 void ARemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -277,6 +279,10 @@ void ARemyCharacter::MulticastElim_Implementation()
 	}
 	if (ElimBotSound) {
 		UGameplayStatics::SpawnSoundAtLocation(this, ElimBotSound, GetActorLocation());
+	}
+	bool bHideSniperScope = IsLocallyControlled() && Combat && Combat->bAiming && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle;
+	if (bHideSniperScope) {
+		ShowSniperScopeWidget(false);
 	}
 }
 

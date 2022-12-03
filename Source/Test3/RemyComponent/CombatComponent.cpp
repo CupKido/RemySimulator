@@ -61,8 +61,8 @@ void UCombatComponent::BeginPlay()
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	
-	if (Character && Character->IsLocallyControlled()) 
+
+	if (Character && Character->IsLocallyControlled())
 	{
 		FHitResult HitResult;
 		TraceUnderCrosshairs(HitResult);
@@ -72,7 +72,7 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		InterpFOV(DeltaTime);
 	}
 
-	
+
 
 }
 
@@ -240,7 +240,7 @@ int32 UCombatComponent::AmountToReload()
 		return FMath::Clamp(RoomInMag, 0, Least);
 	}
 	return 0;
-	
+
 }
 
 
@@ -432,20 +432,23 @@ void UCombatComponent::InterpFOV(float DeltaTime) {
 }
 
 void UCombatComponent::SetAiming(bool bIsAiming) {
-	if (EquippedWeapon)
-	{
-		bAiming = bIsAiming;
-		if (Character) {
-			Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
-		}
-		ServerSetAiming(bIsAiming);
+	if (EquippedWeapon == nullptr || Character == nullptr) return;
 
+	bAiming = bIsAiming;
+	ServerSetAiming(bIsAiming);
+
+	Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+
+	if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle) {
+		Character->ShowSniperScopeWidget(bIsAiming);
 	}
+
+
 }
 
 bool UCombatComponent::CanFire() {
 	if (EquippedWeapon == nullptr) return false;
-	 return !EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied;
+	return !EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied;
 }
 
 void UCombatComponent::OnRep_CarriedAmmo()
