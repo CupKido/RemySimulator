@@ -39,6 +39,8 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	class UProjectileMovementComponent* ProjectileMovementComponent;
 
+	void ProjectileDestroyTimerFinished();
+
 private:
 
 
@@ -50,8 +52,13 @@ private:
 	UPROPERTY()
 	class UParticleSystemComponent* TracerComponent;
 
+	UPROPERTY(EditAnywhere)
+	bool bDestroyProjectileAfterTime = true;
 
+	FTimerHandle ProjectileDestroyTimer;
 
+	UPROPERTY(EditAnywhere)
+	float ProjectileDestroyTime = 25.f;
 
 
 public:	
