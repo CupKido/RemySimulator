@@ -17,7 +17,7 @@ class TEST3_API AProjectileWeapon : public AWeapon
 public:
 	virtual void Fire(const FVector& HitTarget) override;
 
-private:
+protected:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AProjectile> ProjectileClass;
