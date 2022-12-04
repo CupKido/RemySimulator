@@ -5,7 +5,7 @@
 
 void ARandomProjectileWeapon::Fire(const FVector& HitTarget)
 {
-	uint32 Selection = FMath::FRandRange(0, NumOfProjectiles);
+	uint32 Selection = FMath::RandRange(0, NumOfProjectiles - 1);
 
 	switch (Selection) {
 	default:
