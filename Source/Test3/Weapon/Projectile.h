@@ -20,7 +20,10 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
+	void StartDestroyTimer();
+	void DestroyTimerFinished();
+	void SpawnTrailSystem();
+	void ExplodeDamage(AActor* OtherActor);
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
@@ -41,6 +44,32 @@ protected:
 
 	void ProjectileDestroyTimerFinished();
 
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* TrailSystem;
+
+	UPROPERTY()
+	class UNiagaraComponent* TrailSystemComponent;
+
+
+
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* ProjectileMesh;
+
+	UPROPERTY(EditAnywhere)
+	float InnerRadius = 200.f;
+
+	UPROPERTY(EditAnywhere)
+	float OuterRadius = 500.f;
+
+	UPROPERTY(EditAnywhere)
+	float LaunchOuterRadius = 1000.f;
+
+	UPROPERTY(EditAnywhere)
+	float LaunchInnerRadius = 1000.f;
+
+	UPROPERTY(EditAnywhere)
+	float LaunchStrength = 30.f;
+
 private:
 
 
@@ -60,9 +89,13 @@ private:
 	UPROPERTY(EditAnywhere)
 	float ProjectileDestroyTime = 25.f;
 
+	FTimerHandle DestroyTimer;
+
+	UPROPERTY(EditAnywhere)
+	float DestroyTime = 3.f;
+
 
 public:	
-	// Called every frame
 
 
 };
