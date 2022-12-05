@@ -94,7 +94,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	float DestroyTime = 3.f;
 
-
+	void LaunchPlayers();
 public:	
 
 

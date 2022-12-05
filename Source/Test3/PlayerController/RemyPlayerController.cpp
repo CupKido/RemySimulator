@@ -349,7 +349,7 @@ void ARemyPlayerController::HandleCooldown()
 							InfoTextString.Append(FString::Printf(TEXT("%s\n"), *TiedPlayer->GetPlayerName()));
 						}
 					}
-					InfoTextString.Append(FString::Printf(TEXT("\nwith the score of: %d!\n"), TopPlayers[0]->GetScore()));
+					InfoTextString.Append(FString::Printf(TEXT("\nwith the score of: %d!\n"), FMath::CeilToInt(TopPlayers[0]->GetScore())));
 				}
 				
 				RemyHUD->Announcement->InfoText->SetText(FText::FromString(InfoTextString));

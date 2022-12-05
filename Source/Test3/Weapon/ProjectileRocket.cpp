@@ -24,11 +24,11 @@ AProjectileRocket::AProjectileRocket()
 void AProjectileRocket::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	if (!HasAuthority()) {
 		CollisionBox->OnComponentHit.AddDynamic(this, &AProjectileRocket::OnHit);
 	}
-
+	
 	SpawnTrailSystem();
 
 	if (ProjectileLoop && LoopingSoundAttenuation)
@@ -55,7 +55,7 @@ void AProjectileRocket::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 	ExplodeDamage(OtherActor);
 
 	StartDestroyTimer();
-
+	
 	if (ImpactParticles) {
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, GetActorTransform());
 	}

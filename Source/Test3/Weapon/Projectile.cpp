@@ -69,6 +69,8 @@ void AProjectile::ProjectileDestroyTimerFinished()
 	OnHit(nullptr, nullptr, nullptr, FVector::ZeroVector, FHitResult());
 }
 
+
+
 void AProjectile::SpawnTrailSystem()
 {
 	if (TrailSystem) {
@@ -102,49 +104,54 @@ void AProjectile::ExplodeDamage(AActor* OtherActor)
 				FiringController // Instigator Controller
 			);
 
-
-			TArray<AActor*> Characters;
-			UGameplayStatics::GetAllActorsOfClass(this, ACharacter::StaticClass(), Characters);
-			for (AActor* Character : Characters) {
-				ACharacter* ch = Cast<ACharacter>(Character);
-				if (ch) {
-					FVector VelocityVector = (ch->GetActorLocation() - GetActorLocation());
-					float size = VelocityVector.Size();
-					if (GEngine) {
-						FString temp = FString::Printf(TEXT("%f"), size);
-						GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, temp);
-					}
-					if (size < LaunchOuterRadius) {
-						VelocityVector.Normalize();
-						FHitResult FireHit;
-						UWorld* World = GetWorld();
-						if (World) {
-							FVector Start = GetActorLocation() + (VelocityVector);
-							FVector End = GetActorLocation() + ((ch->GetActorLocation() - GetActorLocation()) - (VelocityVector));
-							World->LineTraceSingleByChannel(
-								FireHit, Start, End, ECollisionChannel::ECC_Camera);
-
-							if (!FireHit.bBlockingHit || FireHit.ImpactPoint == ch->GetActorLocation())
-							{
-								if (size < LaunchInnerRadius) {
-									VelocityVector = (LaunchStrength * 100) * VelocityVector;
-								}
-								else {
-									VelocityVector = (LaunchStrength * 10000 / size) * VelocityVector;
-								}
-
-								ch->LaunchCharacter(VelocityVector, false, false);
-							}
-						}
-
-						/*VelocityVector = (LaunchStrength * 10000 / size) * VelocityVector;
-						ch->LaunchCharacter(VelocityVector, false, false);*/
-					}
-				}
-			}
+			LaunchPlayers();
+			
 		}
 
 
+	}
+}
+
+void AProjectile::LaunchPlayers()
+{
+	TArray<AActor*> Characters;
+	UGameplayStatics::GetAllActorsOfClass(this, ACharacter::StaticClass(), Characters);
+	for (AActor* Character : Characters) {
+		ACharacter* ch = Cast<ACharacter>(Character);
+		if (ch) {
+			FVector VelocityVector = (ch->GetActorLocation() - GetActorLocation());
+			float size = VelocityVector.Size();
+			/*if (GEngine) {
+				FString temp = FString::Printf(TEXT("%f"), size);
+				GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, temp);
+			}*/
+			if (size < LaunchOuterRadius) {
+				VelocityVector.Normalize();
+				FHitResult FireHit;
+				UWorld* World = GetWorld();
+				if (World) {
+					FVector Start = GetActorLocation() + (VelocityVector);
+					FVector End = GetActorLocation() + ((ch->GetActorLocation() - GetActorLocation()) - (VelocityVector));
+					World->LineTraceSingleByChannel(
+						FireHit, Start, End, ECollisionChannel::ECC_Camera);
+
+					if (!FireHit.bBlockingHit || FireHit.ImpactPoint == ch->GetActorLocation())
+					{
+						if (size < LaunchInnerRadius) {
+							VelocityVector = (LaunchStrength * 100) * VelocityVector;
+						}
+						else {
+							VelocityVector = (LaunchStrength * 10000 / size) * VelocityVector;
+						}
+
+						ch->LaunchCharacter(VelocityVector, false, false);
+					}
+				}
+
+				/*VelocityVector = (LaunchStrength * 10000 / size) * VelocityVector;
+				ch->LaunchCharacter(VelocityVector, false, false);*/
+			}
+		}
 	}
 }
 
