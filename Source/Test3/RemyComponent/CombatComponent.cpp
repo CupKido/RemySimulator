@@ -13,7 +13,7 @@
 #include "Test3/PlayerController/RemyPlayerController.h"
 #include "Camera/CameraComponent.h"
 #include "TimerManager.h"
-
+#include "Sound/SoundCue.h"
 
 
 #include "Internationalization/Text.h"
@@ -61,8 +61,8 @@ void UCombatComponent::BeginPlay()
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	
-	if (Character && Character->IsLocallyControlled()) 
+
+	if (Character && Character->IsLocallyControlled())
 	{
 		FHitResult HitResult;
 		TraceUnderCrosshairs(HitResult);
@@ -72,7 +72,7 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		InterpFOV(DeltaTime);
 	}
 
-	
+
 
 }
 
@@ -113,6 +113,9 @@ void UCombatComponent::FireTimerFinished()
 	bCanFire = true;
 	if (bFireButtonPressed && EquippedWeapon->bAutomatic) {
 		Fire();
+	}
+	if (EquippedWeapon->IsEmpty() && bReloadIfEmpty) {
+		Reload();
 	}
 }
 
@@ -166,8 +169,17 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	if (Controller) {
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
 	}
+
+	if (EquippedWeapon->EquipSound) {
+		UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound, Character->GetActorLocation());
+	}
+
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
+
+	if (EquippedWeapon->IsEmpty() && bReloadOnPickup) {
+		Reload();
+	}
 }
 
 void UCombatComponent::Reload()
@@ -228,7 +240,7 @@ int32 UCombatComponent::AmountToReload()
 		return FMath::Clamp(RoomInMag, 0, Least);
 	}
 	return 0;
-	
+
 }
 
 
@@ -254,6 +266,11 @@ void UCombatComponent::OnRep_EquippedWeapon() {
 		if (HandSocket) {
 			HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
 		}
+
+		if (EquippedWeapon->EquipSound) {
+			UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound, Character->GetActorLocation());
+		}
+
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
 	}
@@ -415,20 +432,23 @@ void UCombatComponent::InterpFOV(float DeltaTime) {
 }
 
 void UCombatComponent::SetAiming(bool bIsAiming) {
-	if (EquippedWeapon)
-	{
-		bAiming = bIsAiming;
-		if (Character) {
-			Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
-		}
-		ServerSetAiming(bIsAiming);
+	if (EquippedWeapon == nullptr || Character == nullptr) return;
 
+	bAiming = bIsAiming;
+	ServerSetAiming(bIsAiming);
+
+	Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+
+	if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle) {
+		Character->ShowSniperScopeWidget(bIsAiming);
 	}
+
+
 }
 
 bool UCombatComponent::CanFire() {
 	if (EquippedWeapon == nullptr) return false;
-	 return !EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied;
+	return !EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied;
 }
 
 void UCombatComponent::OnRep_CarriedAmmo()
@@ -443,4 +463,10 @@ void UCombatComponent::OnRep_CarriedAmmo()
 void UCombatComponent::InitializeCarriedAmmo()
 {
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssultRifle, StartingARAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_RocketLauncher, StartingRocketAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_Pistol, StartingPistolAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_SubmachineGun, StartingSMGAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_Shotgun, StartingShotgunAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_SniperRifle, StartingSniperAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_GrenadeLauncher, StartingGrenadeLauncherAmmo);
 }

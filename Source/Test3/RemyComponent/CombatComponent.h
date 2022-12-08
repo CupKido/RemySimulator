@@ -10,7 +10,7 @@
 #include "CombatComponent.generated.h"
 
 class AWeapon;
-#define TRACE_LENGTH 80000.f;
+
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TEST3_API UCombatComponent : public UActorComponent
@@ -27,6 +27,7 @@ public:
 	void Reload();
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
+	void FireButtonPressed(bool bPressed);
 protected:
 	virtual void BeginPlay() override;
 
@@ -40,7 +41,6 @@ protected:
 	void OnRep_EquippedWeapon();
 
 
-	void FireButtonPressed(bool bPressed);
 
 	void Fire();
 
@@ -145,7 +145,25 @@ private:
 	TMap<EWeaponType, int32> CarriedAmmoMap;
 
 	UPROPERTY(EditAnywhere)
-	int32 StartingARAmmo = 30;
+	int32 StartingARAmmo = 1000;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingRocketAmmo = 1000;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingPistolAmmo = 1000;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingSMGAmmo = 1000;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingShotgunAmmo = 1000;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingSniperAmmo = 1000;
+	
+	UPROPERTY(EditAnywhere)
+	int32 StartingGrenadeLauncherAmmo = 1000;
 
 	void InitializeCarriedAmmo();
 
@@ -157,6 +175,11 @@ private:
 
 	void UpdateAmmoValues();
 
+	UPROPERTY(EditAnywhere, Category = "Auto Reload")
+	bool bReloadOnPickup = false;
+
+	UPROPERTY(EditAnywhere, Category = "Auto Reload")
+	bool bReloadIfEmpty = true;
 public:	
 
 		

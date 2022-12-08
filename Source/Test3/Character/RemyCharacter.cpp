@@ -22,6 +22,8 @@
 #include "Test3/Weapon/WeaponTypes.h"
 
 
+
+#include "Test3/HUD/OverheadWidget.h"
 #include "Internationalization/Text.h"
 // Sets default values
 ARemyCharacter::ARemyCharacter()
@@ -46,7 +48,7 @@ ARemyCharacter::ARemyCharacter()
 
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat"));
 	Combat->SetIsReplicated(true);
-	
+
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 0.f, 850.f);
@@ -67,7 +69,16 @@ void ARemyCharacter::Destroyed() {
 	if (ElimBotComponent) {
 		ElimBotComponent->DestroyComponent();
 	}
+
+	ARemyGameMode* RemyGameMode = Cast<ARemyGameMode>(UGameplayStatics::GetGameMode(this));
+	bool bMatchNotInProgress = RemyGameMode && RemyGameMode->GetMatchState() != MatchState::InProgress;
+
+	if (Combat && Combat->EquippedWeapon && bMatchNotInProgress) {
+		Combat->EquippedWeapon->Destroy();
+	}
 }
+
+
 
 void ARemyCharacter::BeginPlay()
 {
@@ -77,6 +88,7 @@ void ARemyCharacter::BeginPlay()
 	if (HasAuthority()) {
 		OnTakeAnyDamage.AddDynamic(this, &ARemyCharacter::ReceiveDamage);
 	}
+
 }
 
 void ARemyCharacter::UpdateHUDHealth()
@@ -95,9 +107,19 @@ void ARemyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	AimOffset(DeltaTime);
+	RotateInPlace(DeltaTime);
 	HideCameraIfCharacterClose();
 	PollInit();
+}
+
+void ARemyCharacter::RotateInPlace(float DeltaTime)
+{
+	if (bDisableGameplay)
+	{
+		bUseControllerRotationPitch = false;
+		return;
+	}
+	AimOffset(DeltaTime);
 }
 
 void ARemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -119,7 +141,7 @@ void ARemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ARemyCharacter::FireButtonReleased);
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ARemyCharacter::ReloadButtonPressed);
 
-	
+
 	PlayerInputComponent->BindAction("ZoomInCamera", IE_Pressed, this, &ARemyCharacter::ZoomInCamera);
 	PlayerInputComponent->BindAction("ZoomOutCamera", IE_Pressed, this, &ARemyCharacter::ZoomOutCamera);
 	PlayerInputComponent->BindAction("SuperSpeed", IE_Pressed, this, &ARemyCharacter::SpeedPressed);
@@ -139,7 +161,7 @@ void ARemyCharacter::PostInitializeComponents() {
 void ARemyCharacter::PlayFireMontage(bool bAiming) {
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
 
-	UAnimInstance * AnimInstance = GetMesh()->GetAnimInstance();
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && FireWeaponMontage) {
 		AnimInstance->Montage_Play(FireWeaponMontage);
 		FName SectionName;
@@ -160,9 +182,29 @@ void ARemyCharacter::PlayReloadMontage()
 		case EWeaponType::EWT_AssultRifle:
 			SectionName = FName("Rifle");
 			break;
+		case EWeaponType::EWT_RocketLauncher:
+			SectionName = FName("Rifle");
+			break;
+		case EWeaponType::EWT_Pistol:
+			SectionName = FName("Rifle");
+			break;
+		case EWeaponType::EWT_SubmachineGun:
+			SectionName = FName("Rifle");
+			break;
+		case EWeaponType::EWT_Shotgun:
+			SectionName = FName("Rifle");
+			break;
+		case EWeaponType::EWT_SniperRifle:
+			SectionName = FName("Rifle");
+			break;
+		case EWeaponType::EWT_GrenadeLauncher:
+			SectionName = FName("Rifle");
+			break;
 		}
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
+		
+	
 }
 
 void ARemyCharacter::PlayElimMontage()
@@ -213,16 +255,16 @@ void ARemyCharacter::MulticastElim_Implementation()
 		SetDynamicDissolveMatInstance(DynamicDissolveMaterialInstanceBody, 4);
 		SetDynamicDissolveMatInstance(DynamicDissolveMaterialInstanceEyelash, 5);
 	}
-	
-	StartDissolve();
-	
-	// Disable character movement
-	GetCharacterMovement()->DisableMovement();
-	GetCharacterMovement()->StopMovementImmediately();
-	if (RemyPlayerController) {
-		DisableInput(RemyPlayerController);
-	}
 
+	StartDissolve();
+
+	// Disable character movement
+	bDisableGameplay = true;
+	GetCharacterMovement()->DisableMovement();
+	if (Combat)
+	{
+		Combat->FireButtonPressed(false);
+	}
 
 	//Disable Collision
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -231,12 +273,16 @@ void ARemyCharacter::MulticastElim_Implementation()
 	// Spawn Elim Bot
 	if (ElimBotEffect)
 	{
-		FVector ElimBotSpawnPoint = GetActorLocation() + FVector(0,0,200);
+		FVector ElimBotSpawnPoint = GetActorLocation() + FVector(0, 0, 200);
 		ElimBotComponent = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ElimBotEffect, ElimBotSpawnPoint, GetActorRotation());
 
 	}
 	if (ElimBotSound) {
 		UGameplayStatics::SpawnSoundAtLocation(this, ElimBotSound, GetActorLocation());
+	}
+	bool bHideSniperScope = IsLocallyControlled() && Combat && Combat->bAiming && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle;
+	if (bHideSniperScope) {
+		ShowSniperScopeWidget(false);
 	}
 }
 
@@ -244,7 +290,7 @@ void ARemyCharacter::SetDynamicDissolveMatInstance(UMaterialInstanceDynamic* Dyn
 	GetMesh()->SetMaterial(index, DynamicDissolveMaterialInstance);
 	DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), 0.55f);
 	DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Glow"), 200.f);
-	
+
 }
 
 void ARemyCharacter::ElimTimerFinished()
@@ -274,6 +320,7 @@ void ARemyCharacter::PlayHitReactMontage()
 //InputAction
 
 void ARemyCharacter::MoveForward(float Value) {
+	if (bDisableGameplay) return;
 	if (Controller != nullptr && Value != 0) {
 		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
 		const FVector Direction(FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X));
@@ -282,6 +329,7 @@ void ARemyCharacter::MoveForward(float Value) {
 }
 
 void ARemyCharacter::MoveRight(float Value) {
+	if (bDisableGameplay) return;
 	if (Controller != nullptr && Value != 0.f)
 	{
 		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
@@ -298,15 +346,16 @@ void ARemyCharacter::LookUp(float Value) {
 	AddControllerPitchInput(Value);
 }
 
-void ARemyCharacter::EquipButtonPressed() 
+void ARemyCharacter::EquipButtonPressed()
 {
+	if (bDisableGameplay) return;
 	if (Combat)
 	{
-		if (HasAuthority()) 
+		if (HasAuthority())
 		{
 			Combat->EquipWeapon(OverlappingWeapon);
 		}
-		else 
+		else
 		{
 			ServerEquipButtonPressed();
 		}
@@ -321,8 +370,9 @@ void ARemyCharacter::ServerEquipButtonPressed_Implementation()
 	}
 }
 
-void ARemyCharacter::CrouchButtonPressed() 
+void ARemyCharacter::CrouchButtonPressed()
 {
+	if (bDisableGameplay) return;
 	if (bIsCrouched) {
 		UnCrouch();
 	}
@@ -333,12 +383,14 @@ void ARemyCharacter::CrouchButtonPressed()
 
 void ARemyCharacter::ReloadButtonPressed()
 {
+	if (bDisableGameplay) return;
 	if (Combat) {
 		Combat->Reload();
 	}
 }
 
 void ARemyCharacter::AimButtonPressed() {
+	if (bDisableGameplay) return;
 	if (Combat) {
 		Combat->SetAiming(true);
 	}
@@ -367,6 +419,7 @@ void ARemyCharacter::AimOffset(float DeltaTime)
 }
 
 void ARemyCharacter::Jump() {
+	if (bDisableGameplay) return;
 	if (bIsCrouched) {
 		UnCrouch();
 	}
@@ -376,12 +429,14 @@ void ARemyCharacter::Jump() {
 }
 
 void ARemyCharacter::FireButtonPressed() {
+	if (bDisableGameplay) return;
 	if (Combat) {
 		Combat->FireButtonPressed(true);
 	}
 }
 
 void ARemyCharacter::FireButtonReleased() {
+	if (bDisableGameplay) return;
 	if (Combat) {
 		Combat->FireButtonPressed(false);
 	}
@@ -422,6 +477,7 @@ void ARemyCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 	DOREPLIFETIME_CONDITION(ARemyCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME(ARemyCharacter, Health);
+	DOREPLIFETIME(ARemyCharacter, bDisableGameplay);
 }
 
 void ARemyCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon) {
@@ -460,6 +516,15 @@ void ARemyCharacter::PollInit() {
 			RemyPlayerState->AddToDefeats(0);
 		}
 	}
+	if (bShowUsernameOverHead && !bUsernameHasSet) {
+		if (OverheadWidget) {
+			UOverheadWidget* overheadWidget = Cast<UOverheadWidget>(OverheadWidget->GetWidget());
+			if (overheadWidget && GetPlayerState()) {
+				overheadWidget->ShowPlayerName(this);
+				bUsernameHasSet = true;
+			}
+		}
+	}
 }
 
 void ARemyCharacter::UpdateDissolveMaterial(float DissolveValue)
@@ -471,7 +536,7 @@ void ARemyCharacter::UpdateDissolveMaterial(float DissolveValue)
 	SetDynamicScalarParameterValueDissolve(DynamicDissolveMaterialInstanceHair, DissolveValue);
 	SetDynamicScalarParameterValueDissolve(DynamicDissolveMaterialInstanceBody, DissolveValue);
 	SetDynamicScalarParameterValueDissolve(DynamicDissolveMaterialInstanceEyelash, DissolveValue);
-	
+
 }
 
 void ARemyCharacter::SetDynamicScalarParameterValueDissolve(UMaterialInstanceDynamic* DynamicDissolveMaterialInstance, float DissolveValue) {
@@ -485,14 +550,14 @@ void ARemyCharacter::SetDynamicScalarParameterValueDissolve(UMaterialInstanceDyn
 
 void ARemyCharacter::StartDissolve()
 {
-	
+
 	DissolveTrack.BindDynamic(this, &ARemyCharacter::UpdateDissolveMaterial);
-	
+
 	if (DissolveCurve && DissolveTimeline) {
 		DissolveTimeline->AddInterpFloat(DissolveCurve, DissolveTrack);
 		DissolveTimeline->Play();
 	}
-	
+
 }
 
 void ARemyCharacter::SetOverlappingWeapon(AWeapon* Weapon) {
@@ -518,6 +583,7 @@ bool ARemyCharacter::IsAiming() {
 
 void ARemyCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
 {
+	if (DamagedActor == DamageCauser) return;
 	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
 	UpdateHUDHealth();
 	PlayHitReactMontage();
@@ -529,7 +595,7 @@ void ARemyCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDa
 			RemyGameMode->PlayerEliminated(this, RemyPlayerController, AttackerController);
 		}
 	}
-	
+
 }
 
 void ARemyCharacter::OnRep_Health()
@@ -558,7 +624,7 @@ void ARemyCharacter::ZoomOutCamera()
 	}
 }
 
-AWeapon* ARemyCharacter::GetEquippedWeapon() 
+AWeapon* ARemyCharacter::GetEquippedWeapon()
 {
 	if (Combat == nullptr) return nullptr;
 	return Combat->EquippedWeapon;
@@ -572,9 +638,9 @@ FVector ARemyCharacter::GetHitTarget() const {
 
 ECombatState ARemyCharacter::GetCombatState() const
 {
-	
+
 	if (Combat == nullptr) return ECombatState::ECS_MAX;
-	
+
 	return Combat->CombatState;
-	
+
 }

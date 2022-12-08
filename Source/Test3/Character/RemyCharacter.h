@@ -40,6 +40,13 @@ public:
 	void MulticastElim();
 
 	virtual void Destroyed() override;
+
+	UPROPERTY(Replicated)
+	bool bDisableGameplay = false;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void ShowSniperScopeWidget(bool bShowScope);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -70,6 +77,8 @@ protected:
 	void UpdateHUDHealth();
 	// poll for any relevant class and initialize HUD
 	void PollInit();
+	void RotateInPlace(float DeltaTime);
+
 
 	void ZoomInCamera();
 	void ZoomOutCamera();
@@ -108,6 +117,10 @@ private:
 	float AO_Yaw;
 	float AO_Pitch;
 
+	UPROPERTY(EditAnywhere)
+	bool bShowUsernameOverHead = true;
+
+	bool bUsernameHasSet = false;
 	/** 
 	* Animation montages
 	*/
@@ -247,4 +260,6 @@ public:
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 	ECombatState GetCombatState() const;
+	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
+	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 };

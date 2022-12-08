@@ -73,6 +73,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = Combat)
 		bool bAutomatic = true;
 
+	UPROPERTY(EditAnywhere)
+	class USoundCue* EquipSound;
 
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
 	int32 Ammo;
@@ -140,6 +142,14 @@ private:
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType;
 
+	UPROPERTY(EditAnywhere)
+	bool bIsJetpack = false;
+
+	UPROPERTY(EditAnywhere)
+	bool bLaunchForward = false;
+
+	UPROPERTY(EditAnywhere)
+	float JetpackStrength = 30;
 
 public:	
 	
