@@ -38,6 +38,7 @@ void URemyAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	bIsCrouched = RemyC->bIsCrouched;
 	bAiming = RemyC->IsAiming();
 	bElimmed = RemyC->IsElimmed();
+	bInWater = RemyC->GetInWater();
 
 	//OffsetYaw for strafing
 	FRotator AimRotation = RemyC->GetBaseAimRotation();

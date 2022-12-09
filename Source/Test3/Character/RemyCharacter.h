@@ -248,7 +248,15 @@ private:
 	UPROPERTY()
 	class ARemyPlayerState * RemyPlayerState;
 
+	bool bInWater = false;
+
+	UFUNCTION(BlueprintCallable)
+	void SetInWater(bool InWater);
+
+	
+
 public:
+	
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
 	bool IsAiming();
@@ -262,4 +270,5 @@ public:
 	ECombatState GetCombatState() const;
 	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
+	FORCEINLINE bool GetInWater() const { return bInWater; };
 };

@@ -561,6 +561,11 @@ void ARemyCharacter::StartDissolve()
 
 }
 
+void ARemyCharacter::SetInWater(bool InWater)
+{
+	bInWater = InWater;
+}
+
 void ARemyCharacter::SetOverlappingWeapon(AWeapon* Weapon) {
 	if (OverlappingWeapon) {
 		OverlappingWeapon->ShowPickupWidget(false);
