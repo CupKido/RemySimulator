@@ -87,6 +87,7 @@ void ARemyCharacter::BeginPlay()
 	UpdateHUDHealth();
 	if (HasAuthority()) {
 		OnTakeAnyDamage.AddDynamic(this, &ARemyCharacter::ReceiveDamage);
+
 	}
 
 }

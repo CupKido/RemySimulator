@@ -94,9 +94,9 @@ FVector AHitScanWeapon::TraceEndWithScatter(const FVector& TraceStart, const FVe
 	FVector RandVec = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, SphereRadius);
 	FVector EndLocation = SphereCenter + RandVec;
 	FVector ToEndLocation = EndLocation - TraceStart;
-	/*DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Blue, true);
+	DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Blue, true);
 	DrawDebugSphere(GetWorld(), EndLocation, 4.f, 12, FColor::Orange, true);
-	DrawDebugLine(GetWorld(), TraceStart, TraceStart + ToEndLocation * (TRACE_LENGTH) / ToEndLocation.Size(), FColor::Cyan, true);*/
+	DrawDebugLine(GetWorld(), TraceStart, TraceStart + ToEndLocation * (TRACE_LENGTH) / ToEndLocation.Size(), FColor::Cyan, true);
 	return FVector(TraceStart + ToEndLocation * (TRACE_LENGTH) / ToEndLocation.Size());
 }
 
