@@ -85,6 +85,8 @@ protected:
 	void SprintPressed();
 	void SpeedPressed();
 
+	UPROPERTY(EditAnywhere, Category = Camera)
+	bool EnableCameraZoom = false;
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -93,6 +95,14 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class UCameraComponent* FollowCamera;
 
+	UPROPERTY(VisibleAnywhere, Category = Camera)
+	USpringArmComponent* KilledCameraBoom;
+
+	UPROPERTY(VisibleAnywhere, Category = Camera)
+	class ACameraActor* KilledCamera;
+
+
+	USceneComponent* cameraSceneComponent;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"));
 	class UWidgetComponent* OverheadWidget;
 
@@ -138,8 +148,9 @@ private:
 	UAnimMontage* ElimMontage;
 
 
-	
+	void ChangeDeathCamera(AActor* Camera, AController* controller);
 
+	void ChangeDeathCamera(UCameraComponent* Camera, AController* controller);
 
 	void HideCameraIfCharacterClose();
 
@@ -248,6 +259,7 @@ private:
 	UPROPERTY()
 	class ARemyPlayerState * RemyPlayerState;
 
+
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
@@ -262,4 +274,6 @@ public:
 	ECombatState GetCombatState() const;
 	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
+	FORCEINLINE ACameraActor* GetKilledCameraActor() const { return KilledCamera; }
+	void SetBoomOffsetAndLength(FVector Offset, float Length);
 };

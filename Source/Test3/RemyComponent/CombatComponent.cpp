@@ -300,6 +300,9 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		{
 			float DistanceToCharacter = (Character->GetActorLocation() - Start).Size();
 			//
+			if (DistanceToCharacter < 40) {
+
+			}
 			if (DistanceToCharacter < 145) {
 				Start += CrosshairWorldDirection * (DistanceToCharacter * 5);
 			}
@@ -310,7 +313,7 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 			{
 				Start += CrosshairWorldDirection * (DistanceToCharacter);
 			}
-			//DrawDebugSphere(GetWorld(), Start, 16.f, 12, FColor::Red, false);
+			DrawDebugSphere(GetWorld(), Start, 16.f, 12, FColor::Red, false);
 		}
 
 		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
@@ -438,10 +441,30 @@ void UCombatComponent::SetAiming(bool bIsAiming) {
 	ServerSetAiming(bIsAiming);
 
 	Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
-
+	if (bFirstPersonAim) {
+		if (bIsAiming) {
+			Character->SetBoomOffsetAndLength(FVector(8, 0, 80), 0);
+		}
+		else {
+			Character->SetBoomOffsetAndLength(FVector(0, 0, 150), 400);
+		}
+	}
+	else {
+		if (bIsAiming) {
+			Character->SetBoomOffsetAndLength(FVector(0, 0, 105), 400);
+		}
+		else {
+			Character->SetBoomOffsetAndLength(FVector(0, 0, 140), 300);
+		}
+	}
 	if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle) {
 		Character->ShowSniperScopeWidget(bIsAiming);
-	}
+		if (bIsAiming) {
+			Character->SetBoomOffsetAndLength(FVector(8, 0, 80), 0);
+		}
+		else {
+			Character->SetBoomOffsetAndLength(FVector(0, 0, 150), 400);
+		}	}
 
 
 }

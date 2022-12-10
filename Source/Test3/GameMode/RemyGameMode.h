@@ -52,6 +52,8 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	float MaxSpawnDistance = 10000;
+
+
 public:
 	FORCEINLINE float GetCountDownTime() const { return CountDownTime; }
 };

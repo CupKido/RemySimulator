@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
+#include <Kismet/GameplayStatics.h>
 #include "RemyCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -20,7 +20,7 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "Test3/PlayerState/RemyPlayerState.h"
 #include "Test3/Weapon/WeaponTypes.h"
-
+#include "GameFramework/PlayerController.h"
 
 
 #include "Test3/HUD/OverheadWidget.h"
@@ -39,7 +39,19 @@ ARemyCharacter::ARemyCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
+	FollowCamera->SetActive(true);
 
+	KilledCameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("KilledCameraBoom"));
+	KilledCameraBoom->SetupAttachment(GetMesh());
+	KilledCameraBoom->TargetArmLength = 500.f;
+	KilledCameraBoom->bUsePawnControlRotation = false;
+
+	KilledCamera = CreateDefaultSubobject<ACameraActor>(TEXT("KilledCamera"));
+//	KilledCamera->AttachToComponent(CameraBoom, FAttachmentTransformRules::KeepWorldTransform);
+
+	//AActor* cameraActor = CreateDefaultSubobject<AActor>(TEXT("KilledCameraActor"));
+	/*KilledCameraActor = CreateDefaultSubobject<AActor>(TEXT("KilledCameraActor"));*/
+	
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 
@@ -89,6 +101,7 @@ void ARemyCharacter::BeginPlay()
 		OnTakeAnyDamage.AddDynamic(this, &ARemyCharacter::ReceiveDamage);
 	}
 
+	KilledCamera->SetActive(true);
 }
 
 void ARemyCharacter::UpdateHUDHealth()
@@ -141,9 +154,11 @@ void ARemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ARemyCharacter::FireButtonReleased);
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ARemyCharacter::ReloadButtonPressed);
 
-
-	PlayerInputComponent->BindAction("ZoomInCamera", IE_Pressed, this, &ARemyCharacter::ZoomInCamera);
-	PlayerInputComponent->BindAction("ZoomOutCamera", IE_Pressed, this, &ARemyCharacter::ZoomOutCamera);
+	if (EnableCameraZoom) {
+		PlayerInputComponent->BindAction("ZoomInCamera", IE_Pressed, this, &ARemyCharacter::ZoomInCamera);
+		PlayerInputComponent->BindAction("ZoomOutCamera", IE_Pressed, this, &ARemyCharacter::ZoomOutCamera);
+	}
+	
 	PlayerInputComponent->BindAction("SuperSpeed", IE_Pressed, this, &ARemyCharacter::SpeedPressed);
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ARemyCharacter::SprintPressed);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ARemyCharacter::SprintPressed);
@@ -203,8 +218,8 @@ void ARemyCharacter::PlayReloadMontage()
 		}
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
-		
-	
+
+
 }
 
 void ARemyCharacter::PlayElimMontage()
@@ -283,6 +298,9 @@ void ARemyCharacter::MulticastElim_Implementation()
 	bool bHideSniperScope = IsLocallyControlled() && Combat && Combat->bAiming && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle;
 	if (bHideSniperScope) {
 		ShowSniperScopeWidget(false);
+	}
+	if (OverheadWidget) {
+		OverheadWidget->SetVisibility(false);
 	}
 }
 
@@ -490,6 +508,19 @@ void ARemyCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon) {
 	}
 }
 
+void ARemyCharacter::ChangeDeathCamera(AActor* Camera, AController* controller)
+{
+	ARemyPlayerController* AttackerController = Cast<ARemyPlayerController>(controller);
+
+	RemyPlayerController->SetViewTargetWithBlend(Camera, 0.5f);
+
+}
+
+void ARemyCharacter::ChangeDeathCamera(UCameraComponent* Camera, AController* controller)
+{
+		
+}
+
 void ARemyCharacter::HideCameraIfCharacterClose()
 {
 	if (!IsLocallyControlled()) return;
@@ -583,17 +614,28 @@ bool ARemyCharacter::IsAiming() {
 
 void ARemyCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
 {
+
 	if (DamagedActor == DamageCauser) return;
 	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
 	UpdateHUDHealth();
+
 	PlayHitReactMontage();
 	if (Health < 0.5f && !bElimmed) {
 		ARemyGameMode* RemyGameMode = GetWorld()->GetAuthGameMode<ARemyGameMode>();
 		if (RemyGameMode) {
 			RemyPlayerController = RemyPlayerController == nullptr ? Cast<ARemyPlayerController>(Controller) : RemyPlayerController;
 			ARemyPlayerController* AttackerController = Cast<ARemyPlayerController>(InstigatorController);
+			ARemyCharacter* RemyCauser = Cast<ARemyCharacter>(AttackerController->GetPawn());
+			if (RemyCauser) {
+				/*ChangeDeathCamera(RemyCauser->CameraBoom, this);*/
+				ChangeDeathCamera(RemyCauser, InstigatorController);
+				if (GEngine) {
+					GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, FString("Valid"));
+				}
+			}
 			RemyGameMode->PlayerEliminated(this, RemyPlayerController, AttackerController);
 		}
+
 	}
 
 }
@@ -607,21 +649,14 @@ void ARemyCharacter::OnRep_Health()
 
 void ARemyCharacter::ZoomInCamera()
 {
-	if (CameraBoom->TargetArmLength > 70) {
-		CameraBoom->TargetArmLength -= 40;
-	}
-	else {
-		CameraBoom->TargetArmLength = 70;
-	}
+	CameraBoom->TargetArmLength = FMath::Clamp(CameraBoom->TargetArmLength - 40, 70, 800);
+	/*
+	CameraBoom->SocketOffset = FVector(FMath::Clamp(CameraBoom->SocketOffset.X + 2, 0, 8), 0, FMath::Clamp(CameraBoom->SocketOffset.Z - 8, 40, 150));*/
 }
 void ARemyCharacter::ZoomOutCamera()
 {
-	if (CameraBoom->TargetArmLength < 800) {
-		CameraBoom->TargetArmLength += 40;
-	}
-	else {
-		CameraBoom->TargetArmLength = 800;
-	}
+	CameraBoom->TargetArmLength = FMath::Clamp(CameraBoom->TargetArmLength + 40, 70, 800);/*
+	CameraBoom->SocketOffset = FVector(FMath::Clamp(CameraBoom->SocketOffset.X - 2, 0, 8), 0, FMath::Clamp(CameraBoom->SocketOffset.Z + 8, 40, 150));*/
 }
 
 AWeapon* ARemyCharacter::GetEquippedWeapon()
@@ -643,4 +678,10 @@ ECombatState ARemyCharacter::GetCombatState() const
 
 	return Combat->CombatState;
 
+}
+
+void ARemyCharacter::SetBoomOffsetAndLength(FVector Offset, float Length) {
+	CameraBoom->TargetArmLength = FMath::Clamp(Length, 70, 800);
+	
+	CameraBoom->SocketOffset = Offset;
 }

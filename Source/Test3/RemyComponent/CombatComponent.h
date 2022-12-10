@@ -180,6 +180,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Auto Reload")
 	bool bReloadIfEmpty = true;
+
+	UPROPERTY(EditAnywhere, Category = "Aim")
+	bool bFirstPersonAim = true;
 public:	
 
 		
