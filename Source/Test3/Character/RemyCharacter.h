@@ -98,9 +98,6 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	USpringArmComponent* KilledCameraBoom;
 
-	UPROPERTY(VisibleAnywhere, Category = Camera)
-	class ACameraActor* KilledCamera;
-
 
 	USceneComponent* cameraSceneComponent;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"));
@@ -274,6 +271,6 @@ public:
 	ECombatState GetCombatState() const;
 	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
-	FORCEINLINE ACameraActor* GetKilledCameraActor() const { return KilledCamera; }
+	//FORCEINLINE AActor* GetKilledCameraActor() const { return ; }
 	void SetBoomOffsetAndLength(FVector Offset, float Length);
 };

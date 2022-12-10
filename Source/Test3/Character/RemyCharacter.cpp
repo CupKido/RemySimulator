@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include <Kismet/GameplayStatics.h>
 #include "RemyCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -46,11 +45,6 @@ ARemyCharacter::ARemyCharacter()
 	KilledCameraBoom->TargetArmLength = 500.f;
 	KilledCameraBoom->bUsePawnControlRotation = false;
 
-	KilledCamera = CreateDefaultSubobject<ACameraActor>(TEXT("KilledCamera"));
-//	KilledCamera->AttachToComponent(CameraBoom, FAttachmentTransformRules::KeepWorldTransform);
-
-	//AActor* cameraActor = CreateDefaultSubobject<AActor>(TEXT("KilledCameraActor"));
-	/*KilledCameraActor = CreateDefaultSubobject<AActor>(TEXT("KilledCameraActor"));*/
 	
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
@@ -101,7 +95,6 @@ void ARemyCharacter::BeginPlay()
 		OnTakeAnyDamage.AddDynamic(this, &ARemyCharacter::ReceiveDamage);
 	}
 
-	KilledCamera->SetActive(true);
 }
 
 void ARemyCharacter::UpdateHUDHealth()
