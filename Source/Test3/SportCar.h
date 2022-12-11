@@ -4,12 +4,40 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "ChaosVehicleMovementComponent.h"
 #include "SportCar.generated.h"
 
 UCLASS()
 class TEST3_API ASportCar : public APawn
 {
 	GENERATED_BODY()
+private:
+	UPROPERTY()
+		class USceneComponent* Root;
+
+	UPROPERTY(Category = Vehicle, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		class USkeletalMeshComponent* Mesh;
+
+	UPROPERTY(Category = Vehicle, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		class UChaosVehicleMovementComponent* VehicleMovementComponent;
+
+	UPROPERTY()
+		USkeletalMeshComponent* SkeletalMesh;
+
+	UPROPERTY()
+		class UBoxComponent* Box = nullptr;
+
+	UPROPERTY()
+		class USpringArmComponent* SpringArm1;
+
+	UPROPERTY()
+		class UCameraComponent* FrontCamera;
+
+	UPROPERTY()
+		 USpringArmComponent* SpringArm;
+
+	UPROPERTY()
+		 UCameraComponent* BackCamera;
 
 public:
 	// Sets default values for this pawn's properties
@@ -19,7 +47,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
