@@ -92,7 +92,7 @@ void AProjectile::ExplodeDamage(AActor* OtherActor)
 			UGameplayStatics::ApplyRadialDamageWithFalloff(
 				this, // World context object
 				Damage, // Base Damage
-				5.f, // minimum damage
+				Damage * 0.2f, // minimum damage
 				GetActorLocation(), // Origin Location
 				InnerRadius, // Inner radius where players receive full damage
 				OuterRadius, // Outer radius until where player receive fading damage

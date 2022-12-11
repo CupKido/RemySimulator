@@ -474,8 +474,8 @@ void ARemyCharacter::ServerSpeedPressed_Implementation(bool ToSpeed) {
 }
 
 void ARemyCharacter::SprintPressed() {
-	if (GetCharacterMovement()->MaxWalkSpeed != 700) {
-		GetCharacterMovement()->MaxWalkSpeed = 700;
+	if (GetCharacterMovement()->MaxWalkSpeed != 900) {
+		GetCharacterMovement()->MaxWalkSpeed = 900;
 	}
 	else {
 		GetCharacterMovement()->MaxWalkSpeed = 500;
