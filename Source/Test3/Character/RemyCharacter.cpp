@@ -126,6 +126,8 @@ void ARemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ARemyCharacter::SprintPressed);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ARemyCharacter::SprintPressed);
 
+	PlayerInputComponent->BindAction("EnterVehicle", IE_Pressed, this, &ARemyCharacter::EnterVehicleButtonPressed);
+
 
 }
 
@@ -384,6 +386,18 @@ void ARemyCharacter::FireButtonPressed() {
 void ARemyCharacter::FireButtonReleased() {
 	if (Combat) {
 		Combat->FireButtonPressed(false);
+	}
+}
+
+void ARemyCharacter::EnterVehicleButtonPressed()
+{
+	if (HasAuthority())
+	{
+		Combat->EquipWeapon(OverlappingWeapon);
+	}
+	else
+	{
+		ServerEquipButtonPressed();
 	}
 }
 

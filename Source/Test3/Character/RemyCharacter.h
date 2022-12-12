@@ -59,6 +59,7 @@ protected:
 	virtual void Jump() override;
 	void FireButtonPressed();
 	void FireButtonReleased();
+	void EnterVehicleButtonPressed();
 
 	// Play Montages
 

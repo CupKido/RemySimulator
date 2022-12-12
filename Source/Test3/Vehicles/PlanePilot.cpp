@@ -23,9 +23,6 @@ APlanePilot::APlanePilot()
 
 	SpringArmComp->SetupAttachment(Fuselage);
 
-
-	
-
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
 	SpringArmComp->SocketOffset = FVector(0, 0, 300);
@@ -52,7 +49,7 @@ APlanePilot::APlanePilot()
 	FlapsL->bEditableWhenInherited = true;
 	FlapsR->bEditableWhenInherited = true;
 
-
+	// attach meshes to root component
 	Glass->SetupAttachment(Fuselage, TEXT("Glass"));
 	AileronL->SetupAttachment(Fuselage, TEXT("AileronL"));
 	AileronR->SetupAttachment(Fuselage, TEXT("AileronR"));
@@ -63,6 +60,7 @@ APlanePilot::APlanePilot()
 	FlapsL->SetupAttachment(Fuselage, TEXT("FlapsL"));
 	FlapsR->SetupAttachment(Fuselage, TEXT("FlapsR"));
 
+	// load meshes
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> GlassMesh(TEXT("StaticMesh'/Game/Vehicles/Plane/Assets/SM_glass.SM_glass'"));
 	if (GlassMesh.Succeeded())
 		Glass->SetStaticMesh(GlassMesh.Object);
@@ -99,6 +97,7 @@ APlanePilot::APlanePilot()
 	if (FlapsRMesh.Succeeded())
 		FlapsR->SetStaticMesh(FlapsRMesh.Object);
 	
+	TextToEnter = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Press F to Enter"));
 }
 
 // Called when the game starts or when spawned
@@ -134,11 +133,14 @@ void APlanePilot::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAxis("Yaw", this, &APlanePilot::Turn);
 	PlayerInputComponent->BindAxis("Pitch", this, &APlanePilot::Pitch);
 	PlayerInputComponent->BindAxis("Roll", this, &APlanePilot::Roll);
+
+	PlayerInputComponent->BindAction("Roll", IE_Pressed, this, &APlanePilot::ManageWheels);
+	PlayerInputComponent->BindAction("EnterVehicle", IE_Pressed, this, &APlanePilot::ManageVehicle);
 }
 
 void APlanePilot::UpdatePosition(float DeltaSeconds)
 {
-	//calculae current spped (possible in one line but it was too cluttered)
+	//calculate current spped (possible in one line but it was too cluttered)
 	if (thrustSpeed < currentSpeed)
 		currentSpeed = FMath::FInterpTo(currentSpeed, thrustSpeed, DeltaSeconds, drag);
 	else
@@ -153,6 +155,7 @@ void APlanePilot::UpdatePosition(float DeltaSeconds)
 	//update position
 	newPosition.Z = newPosition.Z - appliedGravity * DeltaSeconds;
 	this->AddActorWorldOffset(newPosition, true);
+
 }
 
 void APlanePilot::UpdateYaw(float Value, float DeltaSeconds)
@@ -196,9 +199,10 @@ void APlanePilot::UpdateRoll(float Value, float DeltaSeconds)
 
 void APlanePilot::PrintVariables()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("thrust Speed: %f"), thrustSpeed));
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("current Speed: %f"), currentSpeed));
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("applied Gravity: %f"), appliedGravity));
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("height: %f"), this->GetActorLocation().Z));
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("thrust Speed: %f"), thrustSpeed));
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("current Speed: %f"), currentSpeed));
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("applied Gravity: %f"), appliedGravity));
 }
 
 void APlanePilot::Thrust(float Value)
@@ -219,6 +223,10 @@ void APlanePilot::Pitch(float Value)
 void APlanePilot::Roll(float Value)
 {
 	UpdateRoll(Value, FApp::GetDeltaTime());
+}
+
+void APlanePilot::MoveWheels()
+{
 }
 
 

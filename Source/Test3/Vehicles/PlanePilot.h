@@ -7,6 +7,7 @@
 #include "GameFramework/Pawn.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Actor.h"
+#include "Components/TextRenderComponent.h"
 #include "Engine/StaticMesh.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
@@ -74,6 +75,13 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Jet Body")
 		class UCameraComponent* CameraComp;
 
+	// plane collision box to enter if collided
+	//UPROPERTY(VisibleAnywhere, Category = "Jet Body")
+	//	class UCollisionBox* Box;
+	
+	UPROPERTY(VisibleAnywhere, Category = "Jet Body")
+		class UTextRenderComponent* TextToEnter;
+
 	// constants start
 	const float maxThrustSpeed = 10000.0;
 	const float minThrustSpeed = 4000.0;
@@ -108,7 +116,19 @@ private:
 	void Turn(float Value);
 	void Pitch(float Value);
 	void Roll(float Value);
+	void OpenWheels();
+	void CloseWheels();
+	void ManageWheels();
+	void EnterVehicle();
+	void ExitVehicle();
+	void ManageVehicle();
+
 
 	UPROPERTY(EditAnywhere, Category = "ThrusterParticles")
 		UNiagaraSystem* ThrusterSystem;
+
+
+	UPROPERTY(VisibleAnywhere, Category = "Jet Wheels")
+		UStaticMeshComponent* wheels;
+
 };
