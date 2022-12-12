@@ -116,12 +116,6 @@ private:
 	void Turn(float Value);
 	void Pitch(float Value);
 	void Roll(float Value);
-	void OpenWheels();
-	void CloseWheels();
-	void ManageWheels();
-	void EnterVehicle();
-	void ExitVehicle();
-	void ManageVehicle();
 
 
 	UPROPERTY(EditAnywhere, Category = "ThrusterParticles")

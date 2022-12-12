@@ -133,9 +133,6 @@ void APlanePilot::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAxis("Yaw", this, &APlanePilot::Turn);
 	PlayerInputComponent->BindAxis("Pitch", this, &APlanePilot::Pitch);
 	PlayerInputComponent->BindAxis("Roll", this, &APlanePilot::Roll);
-
-	PlayerInputComponent->BindAction("Roll", IE_Pressed, this, &APlanePilot::ManageWheels);
-	PlayerInputComponent->BindAction("EnterVehicle", IE_Pressed, this, &APlanePilot::ManageVehicle);
 }
 
 void APlanePilot::UpdatePosition(float DeltaSeconds)
@@ -223,10 +220,6 @@ void APlanePilot::Pitch(float Value)
 void APlanePilot::Roll(float Value)
 {
 	UpdateRoll(Value, FApp::GetDeltaTime());
-}
-
-void APlanePilot::MoveWheels()
-{
 }
 
 
