@@ -35,34 +35,34 @@ public:
 
 
 	// ** plane mesh start **
-	UPROPERTY(VisibleAnywhere, Category = "Jet Body")
+	UPROPERTY(EditAnywhere, Category = "Jet Body")
 		UStaticMeshComponent* Fuselage;
 
-	UPROPERTY(VisibleAnywhere, Category = "Jet Body")
+	UPROPERTY(EditAnywhere, Category = "Jet Body")
 		UStaticMeshComponent* Glass;
 
-	UPROPERTY(VisibleAnywhere, Category = "Jet Body")
+	UPROPERTY(EditAnywhere, Category = "Jet Body")
 		UStaticMeshComponent* AileronL;
 	
-	UPROPERTY(VisibleAnywhere, Category = "Jet Body")
+	UPROPERTY(EditAnywhere, Category = "Jet Body")
 		UStaticMeshComponent* AileronR;
 
-	UPROPERTY(VisibleAnywhere, Category = "Jet Body")
+	UPROPERTY(EditAnywhere, Category = "Jet Body")
 		UStaticMeshComponent* RudderL;
 
-	UPROPERTY(VisibleAnywhere, Category = "Jet Body")
+	UPROPERTY(EditAnywhere, Category = "Jet Body")
 		UStaticMeshComponent* RudderR;
 
-	UPROPERTY(VisibleAnywhere, Category = "Jet Body")
+	UPROPERTY(EditAnywhere, Category = "Jet Body")
 		UStaticMeshComponent* ElevatorL;
 
-	UPROPERTY(VisibleAnywhere, Category = "Jet Body")
+	UPROPERTY(EditAnywhere, Category = "Jet Body")
 		UStaticMeshComponent* ElevatorR;
 
-	UPROPERTY(VisibleAnywhere, Category = "Jet Body")
+	UPROPERTY(EditAnywhere, Category = "Jet Body")
 		UStaticMeshComponent* FlapsL;
 
-	UPROPERTY(VisibleAnywhere, Category = "Jet Body")
+	UPROPERTY(EditAnywhere, Category = "Jet Body")
 		UStaticMeshComponent* FlapsR;
 	// ** plane mesh end **
 
@@ -79,13 +79,18 @@ public:
 	//UPROPERTY(VisibleAnywhere, Category = "Jet Body")
 	//	class UCollisionBox* Box;
 	
-	UPROPERTY(VisibleAnywhere, Category = "Jet Body")
+	UPROPERTY(EditAnywhere, Category = "Jet Body")
 		class UTextRenderComponent* TextToEnter;
 
 	// constants start
-	const float maxThrustSpeed = 10000.0;
-	const float minThrustSpeed = 4000.0;
-	const float thrustMultiplier = 2500.0;
+	UPROPERTY(EditAnywhere)
+	float maxThrustSpeed = 10000.0;
+
+	UPROPERTY(EditAnywhere)
+	float minThrustSpeed = 4000.0;
+
+	UPROPERTY(EditAnywhere)
+	float thrustMultiplier = 2500.0;
 	const float gravity= 981.0;
 	const float drag= 0.25;
 
@@ -122,7 +127,7 @@ private:
 		UNiagaraSystem* ThrusterSystem;
 
 
-	UPROPERTY(VisibleAnywhere, Category = "Jet Wheels")
+	UPROPERTY(EditAnywhere, Category = "Jet Wheels")
 		UStaticMeshComponent* wheels;
 
 };

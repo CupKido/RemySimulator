@@ -15,9 +15,9 @@ APlanePilot::APlanePilot()
 
 	Fuselage = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Fuselage"));
 	
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshContainer(TEXT("StaticMesh'/Game/Vehicles/Plane/Assets/SM_fuselage.SM_fuselage'"));
+	/*static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshContainer(TEXT("StaticMesh'/Game/Vehicles/Plane/Assets/SM_fuselage.SM_fuselage'"));
 	if (MeshContainer.Succeeded())
-		Fuselage->SetStaticMesh(MeshContainer.Object);
+		Fuselage->SetStaticMesh(MeshContainer.Object);*/
 
 	SetRootComponent(Fuselage);
 
@@ -61,7 +61,7 @@ APlanePilot::APlanePilot()
 	FlapsR->SetupAttachment(Fuselage, TEXT("FlapsR"));
 
 	// load meshes
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> GlassMesh(TEXT("StaticMesh'/Game/Vehicles/Plane/Assets/SM_glass.SM_glass'"));
+	/*static ConstructorHelpers::FObjectFinder<UStaticMesh> GlassMesh(TEXT("StaticMesh'/Game/Vehicles/Plane/Assets/SM_glass.SM_glass'"));
 	if (GlassMesh.Succeeded())
 		Glass->SetStaticMesh(GlassMesh.Object);
 
@@ -95,7 +95,7 @@ APlanePilot::APlanePilot()
 
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> FlapsRMesh(TEXT("StaticMesh'/Game/Vehicles/Plane/Assets/SM_flapsR.SM_flapsR'"));
 	if (FlapsRMesh.Succeeded())
-		FlapsR->SetStaticMesh(FlapsRMesh.Object);
+		FlapsR->SetStaticMesh(FlapsRMesh.Object);*/
 	
 	TextToEnter = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Press F to Enter"));
 }
@@ -114,6 +114,7 @@ void APlanePilot::BeginPlay()
 		//     Parameters can be set like this (see documentation for further info) - the names and type must match the user exposed parameter in the Niagara System
 		//NiagaraComp->SetNiagaraVariableFloat(FString("StrengthCoef"), /*float*/0.0);
 	}
+
 }
 
 // Called every frame
@@ -162,9 +163,13 @@ void APlanePilot::UpdateYaw(float Value, float DeltaSeconds)
 
 	this->AddActorLocalRotation(FRotator(0, currentYaw * DeltaSeconds * 20.0, 0), true);
 
-
-	RudderL->SetRelativeRotation(FRotator(0, FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxRudderYaw, -maxRudderYaw), currentYaw), 0));
-	RudderR->SetRelativeRotation(FRotator(0, FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxRudderYaw, -maxRudderYaw), currentYaw), 0));
+	if (RudderL) {
+		RudderL->SetRelativeRotation(FRotator(0, FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxRudderYaw, -maxRudderYaw), currentYaw), 0));
+	}
+	if (RudderR) {
+		RudderR->SetRelativeRotation(FRotator(0, FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxRudderYaw, -maxRudderYaw), currentYaw), 0));
+	}
+	
 }
 
 void APlanePilot::UpdatePitch(float Value, float DeltaSeconds)
@@ -175,11 +180,11 @@ void APlanePilot::UpdatePitch(float Value, float DeltaSeconds)
 	this->AddActorLocalRotation(FRotator(currentPitch * DeltaSeconds * 20.0, 0 ,0), true);
 
 
-	FlapsL->SetRelativeRotation(FRotator(FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxFlapPitch, -maxFlapPitch), currentPitch), 0, 0));
+	/*FlapsL->SetRelativeRotation(FRotator(FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxFlapPitch, -maxFlapPitch), currentPitch), 0, 0));
 	FlapsR->SetRelativeRotation(FRotator(FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxFlapPitch, -maxFlapPitch), currentPitch), 0, 0));
 
 	ElevatorR->SetRelativeRotation(FRotator(FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxElevatorPitch, -maxElevatorPitch), currentPitch), 0, 0));
-	ElevatorL->SetRelativeRotation(FRotator(FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxElevatorPitch, -maxElevatorPitch), currentPitch), 0, 0));
+	ElevatorL->SetRelativeRotation(FRotator(FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxElevatorPitch, -maxElevatorPitch), currentPitch), 0, 0));*/
 }
 
 void APlanePilot::UpdateRoll(float Value, float DeltaSeconds)
@@ -190,8 +195,8 @@ void APlanePilot::UpdateRoll(float Value, float DeltaSeconds)
 	this->AddActorLocalRotation(FRotator(0, 0, currentRoll * DeltaSeconds * 20.0), true);
 
 
-	AileronL->SetRelativeRotation(FRotator(-1.0 * FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxAileronPitch, -maxAileronPitch), currentRoll),0 ,0));
-	AileronR->SetRelativeRotation(FRotator(FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxAileronPitch, -maxAileronPitch), currentRoll), 0, 0));
+	/*AileronL->SetRelativeRotation(FRotator(-1.0 * FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxAileronPitch, -maxAileronPitch), currentRoll),0 ,0));
+	AileronR->SetRelativeRotation(FRotator(FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxAileronPitch, -maxAileronPitch), currentRoll), 0, 0));*/
 }
 
 void APlanePilot::PrintVariables()

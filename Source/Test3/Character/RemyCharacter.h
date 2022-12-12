@@ -236,6 +236,11 @@ private:
 	UPROPERTY()
 	class ARemyPlayerState * RemyPlayerState;
 
+	void SpawnVehicle();
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class APawn> VehicleClass;
+
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
