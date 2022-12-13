@@ -216,7 +216,9 @@ void ARemyCharacter::MulticastElim_Implementation()
 		SetDynamicDissolveMatInstance(DynamicDissolveMaterialInstanceBody, 4);
 		SetDynamicDissolveMatInstance(DynamicDissolveMaterialInstanceEyelash, 5);
 	}
-
+	if (ControlledVehicle) {
+		ControlledVehicle->Destroy();
+	}
 	StartDissolve();
 
 	// Disable character movement
@@ -241,6 +243,7 @@ void ARemyCharacter::MulticastElim_Implementation()
 	if (ElimBotSound) {
 		UGameplayStatics::SpawnSoundAtLocation(this, ElimBotSound, GetActorLocation());
 	}
+	
 }
 
 void ARemyCharacter::SetDynamicDissolveMatInstance(UMaterialInstanceDynamic* DynamicDissolveMaterialInstance, int index) {
@@ -601,22 +604,20 @@ void ARemyCharacter::SpawnVehicle() {
 	if (!HasAuthority()) return;
 	APawn* InstigatorPawn = Cast<APawn>(this);
 
-
-	APawn* vehicle;
 	if (VehicleClass && InstigatorPawn) {
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.Owner = this;
 		SpawnParams.Instigator = InstigatorPawn;
 		UWorld* World = GetWorld();
 		if (World) {
-			vehicle = World->SpawnActor<APawn>(
+			ControlledVehicle = World->SpawnActor<APawn>(
 				VehicleClass,
 				GetActorLocation() + FVector(0,0,300),
 				GetActorRotation(),
 				SpawnParams
 				);
-			if (vehicle) {
-				GetController()->Possess(vehicle);
+			if (ControlledVehicle) {
+				GetController()->Possess(ControlledVehicle);
 			}
 		}
 	}

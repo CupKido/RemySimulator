@@ -20,7 +20,7 @@ void AExplotionPlanePilot::Tick(float DeltaTime) {
 
 void AExplotionPlanePilot::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {
 	ExplodeDamage();
-	GetController()->Possess(GetInstigator());
+	
 	Destroy();
 }
 
@@ -52,9 +52,15 @@ void AExplotionPlanePilot::ExplodeDamage() {
 
 void AExplotionPlanePilot::Destroyed()
 {
+	if (GetController() && GetInstigator()) {
+
+		GetController()->Possess(GetInstigator());
+	}
 	Super::Destroyed();
+	FTransform newt = GetActorTransform();
+	newt.TransformVector(FVector(100, 100, 100));
 	if (ImpactParticles) {
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, GetActorTransform());
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, newt);
 	}
 	if (ImpactSound) {
 		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
@@ -74,7 +80,6 @@ void AExplotionPlanePilot::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 
 void AExplotionPlanePilot::SelfExplode() {
 	ExplodeDamage();
-	GetController()->Possess(GetInstigator());
 	Destroy();
 }
 

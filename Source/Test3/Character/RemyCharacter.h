@@ -241,6 +241,9 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class APawn> VehicleClass;
 
+	UPROPERTY();
+	APawn* ControlledVehicle;
+
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();

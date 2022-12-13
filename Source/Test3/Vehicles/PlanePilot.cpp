@@ -19,7 +19,7 @@ APlanePilot::APlanePilot()
 	if (MeshContainer.Succeeded())
 		Fuselage->SetStaticMesh(MeshContainer.Object);*/
 
-	SetRootComponent(Fuselage);
+	/*SetRootComponent(Fuselage);*/
 
 	SpringArmComp->SetupAttachment(Fuselage);
 
