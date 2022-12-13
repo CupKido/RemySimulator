@@ -29,7 +29,7 @@ void AExplotionPlanePilot::ExplodeDamage() {
 	if (this && HasAuthority()) {
 		if (GetController()) {
 			UGameplayStatics::ApplyRadialDamageWithFalloff(
-				GetInstigator(), // World context object
+				this, // World context object
 				Damage, // Base Damage
 				Damage * 0.2f, // minimum damage
 				GetActorLocation(), // Origin Location
@@ -82,6 +82,12 @@ void AExplotionPlanePilot::SelfExplode() {
 }
 
 void AExplotionPlanePilot::ServerExplode_Implementation() {
+	MulticastExplode();
+	ExplodeDamage();
+	Destroy();
+}
+
+void AExplotionPlanePilot::MulticastExplode_Implementation(){
 	ExplodeDamage();
 	Destroy();
 }

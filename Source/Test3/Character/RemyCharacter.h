@@ -247,6 +247,8 @@ private:
 	UPROPERTY();
 	APawn* ControlledVehicle;
 
+	void RegainControl();
+
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();

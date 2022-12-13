@@ -216,9 +216,6 @@ void ARemyCharacter::MulticastElim_Implementation()
 		SetDynamicDissolveMatInstance(DynamicDissolveMaterialInstanceBody, 4);
 		SetDynamicDissolveMatInstance(DynamicDissolveMaterialInstanceEyelash, 5);
 	}
-	if (ControlledVehicle) {
-		ControlledVehicle->Destroy();
-	}
 	StartDissolve();
 
 	// Disable character movement
@@ -542,6 +539,7 @@ void ARemyCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDa
 	}
 	UpdateHUDHealth();
 	PlayHitReactMontage();
+	RegainControl();
 	if (Health < 0.5f && !bElimmed) {
 		ARemyGameMode* RemyGameMode = GetWorld()->GetAuthGameMode<ARemyGameMode>();
 		if (RemyGameMode) {
@@ -631,4 +629,10 @@ void ARemyCharacter::SpawnVehicle() {
 
 void ARemyCharacter::ServerSpawnVehicle_Implementation() {
 	SpawnVehicle();
+}
+
+void ARemyCharacter::RegainControl() {
+	if (ControlledVehicle) {
+		ControlledVehicle->Destroy();
+	}
 }

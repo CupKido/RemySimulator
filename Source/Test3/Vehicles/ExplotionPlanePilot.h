@@ -32,6 +32,9 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerExplode();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastExplode();
+
 protected:
 
 

@@ -157,6 +157,9 @@ private:
 
 	void UpdateAmmoValues();
 
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	class UTexture2D* CrosshairsCenter;
+
 public:	
 
 		
