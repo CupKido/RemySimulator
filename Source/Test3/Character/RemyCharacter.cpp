@@ -128,7 +128,7 @@ void ARemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ARemyCharacter::SprintPressed);
 
 	PlayerInputComponent->BindAction("EnterVehicle", IE_Pressed, this, &ARemyCharacter::EnterVehicleButtonPressed);
-	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ARemyCharacter::EnterVehicleButtonPressed);
+	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ARemyCharacter::Interact);
 
 
 }
@@ -438,6 +438,7 @@ void ARemyCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 	DOREPLIFETIME_CONDITION(ARemyCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME(ARemyCharacter, Health);
+	DOREPLIFETIME(ARemyCharacter, OverlappedPlane);
 }
 
 void ARemyCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon) {
@@ -619,6 +620,7 @@ void ARemyCharacter::SpawnVehicle() {
 				SpawnParams
 				);
 			if (ControlledVehicle) {
+				GetCharacterMovement()->StopMovementImmediately();
 				GetController()->Possess(ControlledVehicle);
 			}
 		}
@@ -644,10 +646,56 @@ void ARemyCharacter::SetOverlappingPlane(APlanePilot* Plane) {
 
 void ARemyCharacter::OnRep_OverlappingPlane(APlanePilot* LastPlane) {
 	if (OverlappedPlane) {
-		// Show Widget
+		int a = 1;
 	}
 	if (LastPlane)
 	{
 		// Hide Widget
+	}
+}
+
+void ARemyCharacter::Interact() {
+	GetMesh()->SetVisibility(false);
+	if (OverlappedPlane) {
+		//EnterPlane();
+		ServerEnterPlane();
+	}
+}
+
+void ARemyCharacter::EnterPlane()
+{
+	if (OverlappedPlane) {
+		GetCharacterMovement()->StopMovementImmediately();
+		OverheadWidget->SetVisibility(false);
+		if (GetController() && HasAuthority()) {
+			OverlappedPlane->SetEquippedCharacter(this);
+			GetController()->Possess(OverlappedPlane);
+		}
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		GetMesh()->SetVisibility(false);
+		
+	}
+}
+
+void ARemyCharacter::ServerEnterPlane_Implementation() {
+	MulticastEnterPlane();
+}
+
+void ARemyCharacter::MulticastEnterPlane_Implementation() {
+	EnterPlane();
+}
+
+
+void ARemyCharacter::ExitVehicle(FVector newLocation) {
+	
+	OverheadWidget->SetVisibility(true);
+	if (GetCapsuleComponent() && GetMesh()) {
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		GetMesh()->SetVisibility(true);
+	}
+	if (HasAuthority()) {
+		SetActorLocation(newLocation);
 	}
 }

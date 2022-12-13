@@ -62,6 +62,10 @@ APlanePilot::APlanePilot()
 	FlapsL->SetupAttachment(Fuselage, TEXT("FlapsL"));
 	FlapsR->SetupAttachment(Fuselage, TEXT("FlapsR"));
 
+	AreaSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AreaSphere"));
+	AreaSphere->SetupAttachment(Fuselage);
+	AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	//MovementComponent->SetIsReplicated(true);
 	// load meshes
@@ -121,14 +125,13 @@ void APlanePilot::BeginPlay()
 		//NiagaraComp->SetNiagaraVariableFloat(FString("StrengthCoef"), /*float*/0.0);
 	}
 	//Location = GetActorLocation();
-
-	Super::BeginPlay();
 	if (HasAuthority()) {
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		AreaSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
 		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &APlanePilot::OnSphereOverlap);
 		AreaSphere->OnComponentEndOverlap.AddDynamic(this, &APlanePilot::OnSphereEndOverlap);
 	}
+
 }
 
 // Called every frame
@@ -148,11 +151,14 @@ void APlanePilot::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAxis("Yaw", this, &APlanePilot::Turn);
 	PlayerInputComponent->BindAxis("Pitch", this, &APlanePilot::Pitch);
 	PlayerInputComponent->BindAxis("Roll", this, &APlanePilot::Roll);
+	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &APlanePilot::Interact);
 }
 
 void APlanePilot::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(APlanePilot, EquippedCharacter);
 }
 
 void APlanePilot::UpdatePosition(float DeltaSeconds)
@@ -273,4 +279,39 @@ void APlanePilot::OnSphereEndOverlap(
 	if (RemyCharacter) {
 		RemyCharacter->SetOverlappingPlane(nullptr);
 	}
+}
+
+void APlanePilot::SetEquippedCharacter(ARemyCharacter* Character) {
+	EquippedCharacter = Character;
+}
+
+void APlanePilot::Interact() {
+	if (EquippedCharacter) {
+		ServerExitVehicle();
+		//ExitVehicle();
+	}
+}
+
+void APlanePilot::ExitVehicle() {
+	
+	FVector newLocation = GetActorLocation() + GetActorRightVector() * -50;
+	if (HasAuthority()) {
+
+		if (GetController()) {
+			GetController()->Possess(EquippedCharacter);
+		}
+
+
+	}
+	EquippedCharacter->ExitVehicle(newLocation);
+	EquippedCharacter = nullptr;
+	currentSpeed = 0;
+}
+
+void APlanePilot::MulticastExitVehicle_Implementation() {
+	ExitVehicle();
+}
+
+void APlanePilot::ServerExitVehicle_Implementation() {
+	MulticastExitVehicle();
 }

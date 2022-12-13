@@ -77,7 +77,7 @@ protected:
 	void ZoomOutCamera();
 	void SprintPressed();
 	void SpeedPressed();
-
+	void Interact();
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -256,6 +256,13 @@ private:
 	UFUNCTION()
 	void OnRep_OverlappingPlane(APlanePilot* LastPlane);
 
+	void EnterPlane();
+
+	UFUNCTION(Server, Reliable)
+	void ServerEnterPlane();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastEnterPlane();
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	void SetOverlappingPlane(APlanePilot* Plane);
@@ -269,4 +276,5 @@ public:
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 	ECombatState GetCombatState() const;
+	void ExitVehicle(FVector newLocation);
 };

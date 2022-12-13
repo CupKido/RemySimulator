@@ -133,6 +133,8 @@ public:
 			int32 OtherBodyIndex
 		);
 
+	
+
 private:
 
 	void UpdatePosition(float DeltaSeconds);
@@ -146,13 +148,29 @@ private:
 	void Roll(float Value);
 
 
+
 	UPROPERTY(EditAnywhere, Category = "ThrusterParticles")
-		UNiagaraSystem* ThrusterSystem;
+	UNiagaraSystem* ThrusterSystem;
 
 
 	UPROPERTY(EditAnywhere, Category = "Jet Wheels")
-		UStaticMeshComponent* wheels;
+	UStaticMeshComponent* wheels;
 
-	UPROPERTY(VisibleAnywhere, Category = "Plane Properties")
+	UPROPERTY(EditAnywhere, Category = "Plane Properties")
 	class USphereComponent* AreaSphere;
+
+	UPROPERTY(Replicated)
+	class ARemyCharacter* EquippedCharacter;
+
+	void Interact();
+	void ExitVehicle();
+
+	UFUNCTION(Server, Reliable)
+	void ServerExitVehicle();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastExitVehicle();
+public:
+	void SetEquippedCharacter(ARemyCharacter* Character);
+
 };
