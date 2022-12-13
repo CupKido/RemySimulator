@@ -115,6 +115,24 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerUpdateLocation(FVector Location, FRotator Rotation);
 
+	UFUNCTION()
+		virtual void OnSphereOverlap(
+			UPrimitiveComponent* OverlappedComponent,
+			AActor* OtherActor,
+			UPrimitiveComponent* OtherComp,
+			int32 OtherBodyIndex,
+			bool bFromSweep,
+			const FHitResult& SweepResult
+		);
+
+	UFUNCTION()
+		virtual void OnSphereEndOverlap(
+			UPrimitiveComponent* OverlappedComponent,
+			AActor* OtherActor,
+			UPrimitiveComponent* OtherComp,
+			int32 OtherBodyIndex
+		);
+
 private:
 
 	void UpdatePosition(float DeltaSeconds);
@@ -135,4 +153,6 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Jet Wheels")
 		UStaticMeshComponent* wheels;
 
+	UPROPERTY(VisibleAnywhere, Category = "Plane Properties")
+	class USphereComponent* AreaSphere;
 };

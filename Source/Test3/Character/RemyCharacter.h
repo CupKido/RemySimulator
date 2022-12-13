@@ -7,6 +7,7 @@
 #include "Test3/Interfaces/InteractWithCrosshairsInterface.h"
 #include "Components/TimelineComponent.h"
 #include "Test3/RemyTypes/CombatState.h"
+#include "Test3/Vehicles/PlanePilot.h"
 
 
 
@@ -249,8 +250,15 @@ private:
 
 	void RegainControl();
 
+	UPROPERTY(ReplicatedUsing = OnRep_OverlappingPlane)
+	class APlanePilot* OverlappedPlane;
+
+	UFUNCTION()
+	void OnRep_OverlappingPlane(APlanePilot* LastPlane);
+
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
+	void SetOverlappingPlane(APlanePilot* Plane);
 	bool IsWeaponEquipped();
 	bool IsAiming();
 	AWeapon* GetEquippedWeapon();

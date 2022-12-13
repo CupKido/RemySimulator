@@ -4,7 +4,8 @@
 #include "PlanePilot.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "Net/UnrealNetwork.h"
-
+#include "Components/SphereComponent.h" 
+#include "Test3/Character/RemyCharacter.h"
 // Sets default values
 APlanePilot::APlanePilot()
 {
@@ -120,6 +121,14 @@ void APlanePilot::BeginPlay()
 		//NiagaraComp->SetNiagaraVariableFloat(FString("StrengthCoef"), /*float*/0.0);
 	}
 	//Location = GetActorLocation();
+
+	Super::BeginPlay();
+	if (HasAuthority()) {
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		AreaSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &APlanePilot::OnSphereOverlap);
+		AreaSphere->OnComponentEndOverlap.AddDynamic(this, &APlanePilot::OnSphereEndOverlap);
+	}
 }
 
 // Called every frame
@@ -243,4 +252,25 @@ void APlanePilot::Roll(float Value)
 void APlanePilot::ServerUpdateLocation_Implementation(FVector Location, FRotator Rotation) {
 	SetActorLocation(Location);
 	SetActorRotation(Rotation);
+}
+
+void APlanePilot::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	ARemyCharacter* RemyCharacter = Cast<ARemyCharacter>(OtherActor);
+	if (RemyCharacter) {
+		RemyCharacter->SetOverlappingPlane(this);
+	}
+
+}
+
+void APlanePilot::OnSphereEndOverlap(
+	UPrimitiveComponent* OverlappedComponent,
+	AActor* OtherActor,
+	UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex
+) {
+	ARemyCharacter* RemyCharacter = Cast<ARemyCharacter>(OtherActor);
+	if (RemyCharacter) {
+		RemyCharacter->SetOverlappingPlane(nullptr);
+	}
 }

@@ -128,6 +128,7 @@ void ARemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ARemyCharacter::SprintPressed);
 
 	PlayerInputComponent->BindAction("EnterVehicle", IE_Pressed, this, &ARemyCharacter::EnterVehicleButtonPressed);
+	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ARemyCharacter::EnterVehicleButtonPressed);
 
 
 }
@@ -634,5 +635,19 @@ void ARemyCharacter::ServerSpawnVehicle_Implementation() {
 void ARemyCharacter::RegainControl() {
 	if (ControlledVehicle) {
 		ControlledVehicle->Destroy();
+	}
+}
+
+void ARemyCharacter::SetOverlappingPlane(APlanePilot* Plane) {
+	OverlappedPlane = Plane;
+}
+
+void ARemyCharacter::OnRep_OverlappingPlane(APlanePilot* LastPlane) {
+	if (OverlappedPlane) {
+		// Show Widget
+	}
+	if (LastPlane)
+	{
+		// Hide Widget
 	}
 }
