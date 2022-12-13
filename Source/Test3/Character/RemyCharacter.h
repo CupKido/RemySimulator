@@ -238,6 +238,9 @@ private:
 
 	void SpawnVehicle();
 
+	UFUNCTION(Server, Reliable)
+	void ServerSpawnVehicle();
+
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class APawn> VehicleClass;
 

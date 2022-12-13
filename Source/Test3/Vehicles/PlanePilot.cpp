@@ -98,6 +98,7 @@ APlanePilot::APlanePilot()
 		FlapsR->SetStaticMesh(FlapsRMesh.Object);*/
 	
 	TextToEnter = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Press F to Enter"));
+
 }
 
 // Called when the game starts or when spawned

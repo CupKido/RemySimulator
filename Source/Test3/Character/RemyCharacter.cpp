@@ -601,7 +601,10 @@ ECombatState ARemyCharacter::GetCombatState() const
 }
 
 void ARemyCharacter::SpawnVehicle() {
-	if (!HasAuthority()) return;
+	if (!HasAuthority()) {
+		ServerSpawnVehicle();
+		return;
+	}
 	APawn* InstigatorPawn = Cast<APawn>(this);
 
 	if (VehicleClass && InstigatorPawn) {
@@ -624,4 +627,8 @@ void ARemyCharacter::SpawnVehicle() {
 
 
 
+}
+
+void ARemyCharacter::ServerSpawnVehicle_Implementation() {
+	SpawnVehicle();
 }

@@ -9,9 +9,10 @@
 
 void AExplotionPlanePilot::BeginPlay() {
 	Super::BeginPlay();
-	if (HasAuthority()) {
+	/*if (HasAuthority()) {*/
 		Fuselage->OnComponentHit.AddDynamic(this, &AExplotionPlanePilot::OnHit);
-	}
+	/*}*/
+	
 }
 
 void AExplotionPlanePilot::Tick(float DeltaTime) {
@@ -19,9 +20,7 @@ void AExplotionPlanePilot::Tick(float DeltaTime) {
 }
 
 void AExplotionPlanePilot::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {
-	ExplodeDamage();
-	
-	Destroy();
+	ServerExplode();
 }
 
 void AExplotionPlanePilot::ExplodeDamage() {
@@ -52,7 +51,7 @@ void AExplotionPlanePilot::ExplodeDamage() {
 
 void AExplotionPlanePilot::Destroyed()
 {
-	if (GetController() && GetInstigator()) {
+	if (GetController() && GetInstigator() && HasAuthority()) {
 
 		GetController()->Possess(GetInstigator());
 	}
@@ -79,7 +78,10 @@ void AExplotionPlanePilot::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 }
 
 void AExplotionPlanePilot::SelfExplode() {
+	ServerExplode();
+}
+
+void AExplotionPlanePilot::ServerExplode_Implementation() {
 	ExplodeDamage();
 	Destroy();
 }
-
