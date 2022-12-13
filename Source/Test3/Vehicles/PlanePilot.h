@@ -7,7 +7,6 @@
 #include "GameFramework/Pawn.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Actor.h"
-#include "Components/TextRenderComponent.h"
 #include "Engine/StaticMesh.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
@@ -75,12 +74,6 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Jet Body")
 		class UCameraComponent* CameraComp;
 
-	// plane collision box to enter if collided
-	//UPROPERTY(VisibleAnywhere, Category = "Jet Body")
-	//	class UCollisionBox* Box;
-	
-	UPROPERTY(VisibleAnywhere, Category = "Jet Body")
-		class UTextRenderComponent* TextToEnter;
 
 	// constants start
 	const float maxThrustSpeed = 10000.0;
@@ -106,16 +99,44 @@ public:
 	float targetRoll = 0.0;
 	float currentRoll = 0.0;
 
+	UFUNCTION()
+		void PlayerEnter(ARemyCharacter* Character);
+
+	UFUNCTION()
+		void PlayerExit();
+
+protected:
+	UFUNCTION()
+		virtual void OnSphereOverlap(
+			UPrimitiveComponent* OverlappedComponent,
+			AActor* OtherActor,
+			UPrimitiveComponent* OtherComp,
+			int32 OtherBodyIndex,
+			bool bFromSweep,
+			const FHitResult& SweepResult
+		);
+
+	UFUNCTION()
+		virtual void OnSphereEndOverlap(
+			UPrimitiveComponent* OverlappedComponent,
+			AActor* OtherActor,
+			UPrimitiveComponent* OtherComp,
+			int32 OtherBodyIndex
+		);
+
 private:
 	void UpdatePosition(float DeltaSeconds);
 	void UpdateYaw(float Value, float DeltaSeconds);
 	void UpdatePitch(float Value, float DeltaSeconds);
 	void UpdateRoll(float Value, float DeltaSeconds);
-	void PrintVariables();
 	void Thrust(float Value);
 	void Turn(float Value);
 	void Pitch(float Value);
 	void Roll(float Value);
+
+
+	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
+		class USphereComponent* AreaSphere;
 
 
 	UPROPERTY(EditAnywhere, Category = "ThrusterParticles")
@@ -125,4 +146,6 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Jet Wheels")
 		UStaticMeshComponent* wheels;
 
+	UPROPERTY()
+		ARemyCharacter* Character;
 };

@@ -7,10 +7,11 @@
 #include "Test3/Interfaces/InteractWithCrosshairsInterface.h"
 #include "Components/TimelineComponent.h"
 #include "Test3/RemyTypes/CombatState.h"
-
+#include "Test3/Vehicles/PlanePilot.h"
 
 
 #include "RemyCharacter.generated.h"
+
 
 
 UCLASS()
@@ -248,4 +249,18 @@ public:
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 	ECombatState GetCombatState() const;
+
+	// Plane
+private:
+	UPROPERTY(ReplicatedUsing = OnRep_OverlappingPlanePilot)
+		class APlanePilot* OverlappingPlanePilot;
+
+	UFUNCTION()
+		void OnRep_OverlappingPlanePilot(APlanePilot* LastPlanePilot);
+
+	UFUNCTION(Server, Reliable)
+		void ServerEnterVehicleButtonPressed();
+public:
+		void SetOverlappingPlanePilot(APlanePilot* PlanePilot);
+
 };

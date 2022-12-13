@@ -391,14 +391,29 @@ void ARemyCharacter::FireButtonReleased() {
 
 void ARemyCharacter::EnterVehicleButtonPressed()
 {
-	if (HasAuthority())
-	{
-		Combat->EquipWeapon(OverlappingWeapon);
+	if (OverlappingPlanePilot) {
+		
+		if (HasAuthority())
+		{
+			if (GEngine)
+				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString("Entering..."));
+
+			//enter vehicle
+			GetController()->Possess(OverlappingPlanePilot);
+			OverlappingPlanePilot->PlayerEnter(this);
+		}
+		else
+		{
+			ServerEnterVehicleButtonPressed();
+		}
 	}
-	else
-	{
-		ServerEquipButtonPressed();
-	}
+}
+
+void ARemyCharacter::ServerEnterVehicleButtonPressed_Implementation()
+{
+	//if (OverlappingPlanePilot) {
+		//Combat->EquipWeapon(OverlappingWeapon);
+	//}
 }
 
 void ARemyCharacter::SpeedPressed() {
@@ -445,6 +460,13 @@ void ARemyCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon) {
 	if (LastWeapon)
 	{
 		LastWeapon->ShowPickupWidget(false);
+	}
+}
+
+void ARemyCharacter::OnRep_OverlappingPlanePilot(APlanePilot* LastPlanePilot) {
+	if (LastPlanePilot)
+	{
+		//maybe add something
 	}
 }
 
@@ -519,6 +541,11 @@ void ARemyCharacter::SetOverlappingWeapon(AWeapon* Weapon) {
 			OverlappingWeapon->ShowPickupWidget(true);
 		}
 	}
+}
+
+void ARemyCharacter::SetOverlappingPlanePilot(APlanePilot* PlanePilot) {
+
+	OverlappingPlanePilot = PlanePilot;
 }
 
 bool  ARemyCharacter::IsWeaponEquipped()

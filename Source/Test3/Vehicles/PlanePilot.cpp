@@ -2,6 +2,9 @@
 
 
 #include "PlanePilot.h"
+#include "Test3/Character/RemyCharacter.h"
+#include "Components/SphereComponent.h" 
+
 
 
 // Sets default values
@@ -97,22 +100,31 @@ APlanePilot::APlanePilot()
 	if (FlapsRMesh.Succeeded())
 		FlapsR->SetStaticMesh(FlapsRMesh.Object);
 	
-	TextToEnter = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Press F to Enter"));
+	AreaSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AreaSphere"));
+	AreaSphere->SetupAttachment(RootComponent);
+	AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 // Called when the game starts or when spawned
 void APlanePilot::BeginPlay()
 {
 	Super::BeginPlay();
+	if (HasAuthority()) {
+		thrustSpeed = 0;
+		currentSpeed = 0;
 
-	thrustSpeed = minThrustSpeed;
-	currentSpeed = minThrustSpeed;
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		AreaSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &APlanePilot::OnSphereOverlap);
+		AreaSphere->OnComponentEndOverlap.AddDynamic(this, &APlanePilot::OnSphereEndOverlap);
 
-	if (ThrusterSystem) {
-		//     This spawns the chosen effect on the owning WeaponMuzzle SceneComponent
-		//UNiagaraComponent* NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAttached(ThrusterSystem, /*USceneComponent*/0, NAME_None, FVector(0.f), FRotator(0.f), EAttachLocation::Type::KeepRelativeOffset, true);
-		//     Parameters can be set like this (see documentation for further info) - the names and type must match the user exposed parameter in the Niagara System
-		//NiagaraComp->SetNiagaraVariableFloat(FString("StrengthCoef"), /*float*/0.0);
+		if (ThrusterSystem) {
+			//     This spawns the chosen effect on the owning WeaponMuzzle SceneComponent
+			//UNiagaraComponent* NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAttached(ThrusterSystem, /*USceneComponent*/0, NAME_None, FVector(0.f), FRotator(0.f), EAttachLocation::Type::KeepRelativeOffset, true);
+			//     Parameters can be set like this (see documentation for further info) - the names and type must match the user exposed parameter in the Niagara System
+			//NiagaraComp->SetNiagaraVariableFloat(FString("StrengthCoef"), /*float*/0.0);
+		}
 	}
 }
 
@@ -121,7 +133,6 @@ void APlanePilot::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	UpdatePosition(DeltaTime);
-	PrintVariables();
 }
 
 // Called to bind functionality to input
@@ -133,6 +144,8 @@ void APlanePilot::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAxis("Yaw", this, &APlanePilot::Turn);
 	PlayerInputComponent->BindAxis("Pitch", this, &APlanePilot::Pitch);
 	PlayerInputComponent->BindAxis("Roll", this, &APlanePilot::Roll);
+
+	PlayerInputComponent->BindAction("EnterVehicle", IE_Pressed, this, &APlanePilot::PlayerExit);
 }
 
 void APlanePilot::UpdatePosition(float DeltaSeconds)
@@ -194,14 +207,6 @@ void APlanePilot::UpdateRoll(float Value, float DeltaSeconds)
 	AileronR->SetRelativeRotation(FRotator(FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxAileronPitch, -maxAileronPitch), currentRoll), 0, 0));
 }
 
-void APlanePilot::PrintVariables()
-{
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("height: %f"), this->GetActorLocation().Z));
-	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("thrust Speed: %f"), thrustSpeed));
-	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("current Speed: %f"), currentSpeed));
-	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("applied Gravity: %f"), appliedGravity));
-}
-
 void APlanePilot::Thrust(float Value)
 {
 	thrustSpeed = FMath::Clamp(Value* thrustMultiplier* FApp::GetDeltaTime() + thrustSpeed, 0, maxThrustSpeed);
@@ -223,3 +228,38 @@ void APlanePilot::Roll(float Value)
 }
 
 
+void APlanePilot::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	ARemyCharacter* RemyCharacter = Cast<ARemyCharacter>(OtherActor);
+	if (RemyCharacter) {
+		RemyCharacter->SetOverlappingPlanePilot(this);
+	}
+
+}
+
+void APlanePilot::OnSphereEndOverlap(
+	UPrimitiveComponent* OverlappedComponent,
+	AActor* OtherActor,
+	UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex
+) {
+
+	ARemyCharacter* RemyCharacter = Cast<ARemyCharacter>(OtherActor);
+	if (RemyCharacter) {
+		RemyCharacter->SetOverlappingPlanePilot(nullptr);
+	}
+}
+
+void APlanePilot::PlayerEnter(ARemyCharacter* otherCharacter)
+{
+	Character = otherCharacter;
+	Character->GetMesh()->SetupAttachment(Fuselage, TEXT("Seat"));
+}
+
+void APlanePilot::PlayerExit()
+{
+	if (GetController() && Character) {
+		GetController()->Possess(Character);
+		Character->SetActorLocation(GetActorLocation() + GetActorForwardVector()*200 + FVector::CrossProduct(GetActorForwardVector(), GetActorUpVector()) * 500);
+	}
+}
