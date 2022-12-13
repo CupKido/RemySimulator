@@ -141,7 +141,7 @@ private:
 	void UpdateYaw(float Value, float DeltaSeconds);
 	void UpdatePitch(float Value, float DeltaSeconds);
 	void UpdateRoll(float Value, float DeltaSeconds);
-	void PrintVariables();
+	void PrintVariables(float DeltaTime);
 	void Thrust(float Value);
 	void Turn(float Value);
 	void Pitch(float Value);
@@ -172,5 +172,5 @@ private:
 	void MulticastExitVehicle();
 public:
 	void SetEquippedCharacter(ARemyCharacter* Character);
-
+	FORCEINLINE bool GetIsEquipped() const { return (bool)EquippedCharacter; }
 };

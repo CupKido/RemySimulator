@@ -620,8 +620,13 @@ void ARemyCharacter::SpawnVehicle() {
 				SpawnParams
 				);
 			if (ControlledVehicle) {
+				
 				GetCharacterMovement()->StopMovementImmediately();
 				GetController()->Possess(ControlledVehicle);
+				APlanePilot* temp = Cast<APlanePilot>(ControlledVehicle);
+				if (temp) {
+					temp->SetEquippedCharacter(this);
+				}
 			}
 		}
 	}
@@ -664,7 +669,8 @@ void ARemyCharacter::Interact() {
 
 void ARemyCharacter::EnterPlane()
 {
-	if (OverlappedPlane) {
+	if (OverlappedPlane && !OverlappedPlane->GetIsEquipped()) {
+		
 		GetCharacterMovement()->StopMovementImmediately();
 		OverheadWidget->SetVisibility(false);
 		if (GetController() && HasAuthority()) {
@@ -674,7 +680,9 @@ void ARemyCharacter::EnterPlane()
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		GetMesh()->SetVisibility(false);
-		
+		if (Combat && Combat->EquippedWeapon) {
+			Combat->EquippedWeapon->GetWeaponMesh()->SetVisibility(false);
+		}
 	}
 }
 
@@ -694,6 +702,9 @@ void ARemyCharacter::ExitVehicle(FVector newLocation) {
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		GetMesh()->SetVisibility(true);
+	}
+	if (Combat && Combat->EquippedWeapon) {
+		Combat->EquippedWeapon->GetWeaponMesh()->SetVisibility(false);
 	}
 	if (HasAuthority()) {
 		SetActorLocation(newLocation);

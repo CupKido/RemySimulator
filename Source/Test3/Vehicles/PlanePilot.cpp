@@ -139,7 +139,7 @@ void APlanePilot::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	UpdatePosition(DeltaTime);
-	PrintVariables();
+	PrintVariables(DeltaTime);
 }
 
 // Called to bind functionality to input
@@ -227,10 +227,12 @@ void APlanePilot::UpdateRoll(float Value, float DeltaSeconds)
 	AileronR->SetRelativeRotation(FRotator(FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxAileronPitch, -maxAileronPitch), currentRoll), 0, 0));*/
 }
 
-void APlanePilot::PrintVariables()
+void APlanePilot::PrintVariables(float DeltaTime)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("height: %f"), this->GetActorLocation().Z));
-	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("thrust Speed: %f"), thrustSpeed));
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("height: %f"), this->GetActorLocation().Z));
+	if (IsLocallyControlled()) {
+		GEngine->AddOnScreenDebugMessage(-1, DeltaTime, FColor::Yellow, FString::Printf(TEXT("thrust Speed: %f"), thrustSpeed));
+	}
 	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("current Speed: %f"), currentSpeed));
 	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("applied Gravity: %f"), appliedGravity));
 }
@@ -305,7 +307,9 @@ void APlanePilot::ExitVehicle() {
 	}
 	EquippedCharacter->ExitVehicle(newLocation);
 	EquippedCharacter = nullptr;
+	thrustSpeed = 0;
 	currentSpeed = 0;
+	appliedGravity = 1000;
 }
 
 void APlanePilot::MulticastExitVehicle_Implementation() {
