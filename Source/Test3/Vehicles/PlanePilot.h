@@ -22,6 +22,7 @@ public:
 	// Sets default values for this pawn's properties
 	APlanePilot();
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -111,7 +112,11 @@ public:
 	float targetRoll = 0.0;
 	float currentRoll = 0.0;
 
+	UFUNCTION(Server, Reliable)
+	void ServerUpdateLocation(FVector Location, FRotator Rotation);
+
 private:
+
 	void UpdatePosition(float DeltaSeconds);
 	void UpdateYaw(float Value, float DeltaSeconds);
 	void UpdatePitch(float Value, float DeltaSeconds);

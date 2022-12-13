@@ -2,31 +2,32 @@
 
 
 #include "PlanePilot.h"
-
+#include "GameFramework/PawnMovementComponent.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 APlanePilot::APlanePilot()
 {
- 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComp"));
 	SpringArmComp->TargetArmLength = 1000.f;
 
 	Fuselage = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Fuselage"));
-	
+
 	/*static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshContainer(TEXT("StaticMesh'/Game/Vehicles/Plane/Assets/SM_fuselage.SM_fuselage'"));
 	if (MeshContainer.Succeeded())
 		Fuselage->SetStaticMesh(MeshContainer.Object);*/
 
-	/*SetRootComponent(Fuselage);*/
+		/*SetRootComponent(Fuselage);*/
 
 	SpringArmComp->SetupAttachment(Fuselage);
 
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
 	SpringArmComp->SocketOffset = FVector(0, 0, 300);
-	
+
 
 	Glass = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Glass"));
 	AileronL = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("AileronL"));
@@ -60,6 +61,8 @@ APlanePilot::APlanePilot()
 	FlapsL->SetupAttachment(Fuselage, TEXT("FlapsL"));
 	FlapsR->SetupAttachment(Fuselage, TEXT("FlapsR"));
 
+
+	//MovementComponent->SetIsReplicated(true);
 	// load meshes
 	/*static ConstructorHelpers::FObjectFinder<UStaticMesh> GlassMesh(TEXT("StaticMesh'/Game/Vehicles/Plane/Assets/SM_glass.SM_glass'"));
 	if (GlassMesh.Succeeded())
@@ -84,7 +87,7 @@ APlanePilot::APlanePilot()
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ElevatorLMesh(TEXT("StaticMesh'/Game/Vehicles/Plane/Assets/SM_aileronL.SM_aileronL'"));
 	if (ElevatorLMesh.Succeeded())
 		ElevatorL->SetStaticMesh(ElevatorLMesh.Object);
-	
+
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ElevatorRMesh(TEXT("StaticMesh'/Game/Vehicles/Plane/Assets/SM_aileronR.SM_aileronR'"));
 	if (ElevatorRMesh.Succeeded())
 		ElevatorR->SetStaticMesh(ElevatorRMesh.Object);
@@ -96,9 +99,10 @@ APlanePilot::APlanePilot()
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> FlapsRMesh(TEXT("StaticMesh'/Game/Vehicles/Plane/Assets/SM_flapsR.SM_flapsR'"));
 	if (FlapsRMesh.Succeeded())
 		FlapsR->SetStaticMesh(FlapsRMesh.Object);*/
-	
-	TextToEnter = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Press F to Enter"));
 
+	TextToEnter = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Press F to Enter"));
+	bReplicates = true;
+	SetReplicates(true);
 }
 
 // Called when the game starts or when spawned
@@ -115,7 +119,7 @@ void APlanePilot::BeginPlay()
 		//     Parameters can be set like this (see documentation for further info) - the names and type must match the user exposed parameter in the Niagara System
 		//NiagaraComp->SetNiagaraVariableFloat(FString("StrengthCoef"), /*float*/0.0);
 	}
-
+	//Location = GetActorLocation();
 }
 
 // Called every frame
@@ -137,6 +141,11 @@ void APlanePilot::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAxis("Roll", this, &APlanePilot::Roll);
 }
 
+void APlanePilot::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+}
+
 void APlanePilot::UpdatePosition(float DeltaSeconds)
 {
 	//calculate current spped (possible in one line but it was too cluttered)
@@ -146,7 +155,7 @@ void APlanePilot::UpdatePosition(float DeltaSeconds)
 		currentSpeed = thrustSpeed;
 
 	// calculate new position
-	FVector newPosition = currentSpeed* DeltaSeconds* GetActorForwardVector();
+	FVector newPosition = currentSpeed * DeltaSeconds * GetActorForwardVector();
 
 	// calculate applied gravity
 	appliedGravity = FMath::GetMappedRangeValueClamped(FVector2D(0.0, minThrustSpeed), FVector2D(gravity, 0.0), currentSpeed);
@@ -154,11 +163,14 @@ void APlanePilot::UpdatePosition(float DeltaSeconds)
 	//update position
 	newPosition.Z = newPosition.Z - appliedGravity * DeltaSeconds;
 	this->AddActorWorldOffset(newPosition, true);
-
+	ServerUpdateLocation(GetActorLocation(), GetActorRotation());
 }
 
 void APlanePilot::UpdateYaw(float Value, float DeltaSeconds)
 {
+	if (HasAuthority()) {
+		int a = 1;
+	}
 	targetYaw = Value;
 	currentYaw = FMath::FInterpTo(currentYaw, targetYaw, DeltaSeconds, 10.0);
 
@@ -170,7 +182,7 @@ void APlanePilot::UpdateYaw(float Value, float DeltaSeconds)
 	if (RudderR) {
 		RudderR->SetRelativeRotation(FRotator(0, FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxRudderYaw, -maxRudderYaw), currentYaw), 0));
 	}
-	
+
 }
 
 void APlanePilot::UpdatePitch(float Value, float DeltaSeconds)
@@ -178,7 +190,7 @@ void APlanePilot::UpdatePitch(float Value, float DeltaSeconds)
 	targetPitch = Value;
 	currentPitch = FMath::FInterpTo(currentPitch, targetPitch, DeltaSeconds, 10.0);
 
-	this->AddActorLocalRotation(FRotator(currentPitch * DeltaSeconds * 20.0, 0 ,0), true);
+	this->AddActorLocalRotation(FRotator(currentPitch * DeltaSeconds * 20.0, 0, 0), true);
 
 
 	/*FlapsL->SetRelativeRotation(FRotator(FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(maxFlapPitch, -maxFlapPitch), currentPitch), 0, 0));
@@ -190,7 +202,7 @@ void APlanePilot::UpdatePitch(float Value, float DeltaSeconds)
 
 void APlanePilot::UpdateRoll(float Value, float DeltaSeconds)
 {
-	targetRoll= Value;
+	targetRoll = Value;
 	currentRoll = FMath::FInterpTo(currentRoll, targetRoll, DeltaSeconds, 10.0);
 
 	this->AddActorLocalRotation(FRotator(0, 0, currentRoll * DeltaSeconds * 20.0), true);
@@ -210,7 +222,7 @@ void APlanePilot::PrintVariables()
 
 void APlanePilot::Thrust(float Value)
 {
-	thrustSpeed = FMath::Clamp(Value* thrustMultiplier* FApp::GetDeltaTime() + thrustSpeed, 0, maxThrustSpeed);
+	thrustSpeed = FMath::Clamp(Value * thrustMultiplier * FApp::GetDeltaTime() + thrustSpeed, 0, maxThrustSpeed);
 }
 
 void APlanePilot::Turn(float Value)
@@ -228,4 +240,7 @@ void APlanePilot::Roll(float Value)
 	UpdateRoll(Value, FApp::GetDeltaTime());
 }
 
-
+void APlanePilot::ServerUpdateLocation_Implementation(FVector Location, FRotator Rotation) {
+	SetActorLocation(Location);
+	SetActorRotation(Rotation);
+}
